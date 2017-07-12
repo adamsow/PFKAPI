@@ -2,4 +2,4 @@ adamsow
 adamsow.pub
 /src/private/*
 ssh.sh
-/logs/*
+/src/logs/*
