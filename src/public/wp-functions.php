@@ -4,26 +4,7 @@ function wp_check_password($password, $hash, $user_id = '') {
  
     // If the hash is still md5...
     if ( strlen($hash) <= 32 ) {
-    	if(!function_exists('hash_equals'))
-    	{
-    		if(strlen($str1) != strlen($str2))
-    		{
-    			return false;
-            }
-            else
-            {
-				$res = $str1 ^ $str2;
-				$ret = 0;
-				for($i = strlen($res) - 1; $i >= 0; $i--)
-				{
-					$ret |= ord($res[$i]);
-				}
-				$check = !$ret;
-            }
-        }
-        else{
-        	$check = hash_equals( $hash, md5( $password ) );
-        }
+        $check = hash_equals( $hash, md5( $password ) );
         if ( $check && $user_id ) {
             // Rehash using new hash.
             wp_set_password($password, $user_id);

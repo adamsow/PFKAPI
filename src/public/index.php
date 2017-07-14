@@ -15,7 +15,7 @@
 		$logger->pushHandler($file_handler);
 		return $logger;
 	});
-	$app->add(new \Slim\Middleware\JwtAuthentication(array(
+	$app->add(new \Slim\Middleware\JwtAuthentication([
 		"path" => "/",
 		"logger" => $app->log,
 		"passthrough" => "/token",	
@@ -23,7 +23,7 @@
 		"callback" => function ($options) use ($app) {
 			$app->jwt = $options["decoded"];
         }
-	)));
+	]));
 
 	$app->container->singleton('db', function ($c) 
 	{
