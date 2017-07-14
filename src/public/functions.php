@@ -1,5 +1,5 @@
 <?php
-		use \Firebase\JWT\JWT;
+use \Firebase\JWT\JWT;
 
 function hello($db, $log, $dbw)
 {
@@ -10,7 +10,7 @@ function hello($db, $log, $dbw)
 	}
 }
 
-function GetToken($username, $password, $dbw, $log)
+function GetToken($username, $password, $dbw, $log, $secret)
 {
 	require_once('wp-functions.php');
 	require_once('../vendor/firebase/php-jwt/src/JWT.php');
@@ -32,17 +32,20 @@ function GetToken($username, $password, $dbw, $log)
 	$now = new DateTime();
 	$future = new DateTime("now +24 hours");
 	$rand = substr(md5(microtime()),rand(0,26),5);
-	$jti =base64_encode($rand);
-	$secret = "secret";
+	$jti = base64_encode($rand);
 	$payload = array(
 		"username" => $username,
 		"user_id" => $user['id'],
 		"jti" => $jti,
 		"iat" => $now->getTimeStamp(),
 		"exp" => $future->getTimeStamp(),
+		"iss" => "https://c-pfk.pl",
+		"aud" => "https://pfk.org.pl",
 		"scope" => array_keys($roles)
 	);
 		
 	$token = JWT::encode($payload, $secret, "HS256");
+	$log -> addInfo("Token for user: " . $username . " created succesfuly. Generated token: " . $token);
+	
 	return $token;
 }

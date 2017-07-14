@@ -1,4 +1,8 @@
 <?php
+	header('Access-Control-Allow-Origin: https://pfk.org.pl');
+	header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
+	header('Access-Control-Allow-Headers: X-Custom-Header');
+
 	date_default_timezone_set('Europe/Warsaw');
 	require '../vendor/autoload.php';
 	$settings = require '../private/local.php';
@@ -16,7 +20,6 @@
 		"logger" => $app->log,
 		"passthrough" => "/token",	
 		"secret" => $settings['settings']['secret'],
-		"secure" => false,
 		"callback" => function ($options) use ($app) {
 			$app->jwt = $options["decoded"];
         }
@@ -55,6 +58,11 @@
 		}
 	});
 	
+	$app->container->singleton('secret', function ($c) 
+	{
+		return $c['settings']['settings']['secret'];
+	});
+	
 	$app->get('/hello/:name', function ($name) use ($app) 
 	{
 		try
@@ -62,14 +70,14 @@
 			$log = $app->log;
 			$db = $app->db;
 			$dbw = $app->dbw;
-			if (in_array("delete", $app->jwt->scope)) 
+			if (in_array("administrator", $app->jwt->scope)) 
 			{
 				echo "super";
 			} 
 			else 
 			{
 				/* No scope so respond with 401 Unauthorized */
-				$app->response->status(401);
+			//	$app->response->status(401);
 			}
 			
 			hello($db, $log, $dbw);	
@@ -88,8 +96,9 @@
 			$err = require_once('errors.php');
 			$log = $app->log;
 			$dbw = $app->dbw;
-			
-			$token = GetToken($name, $password, $dbw, $log);
+			$secret = $app->secret;
+
+			$token = GetToken($name, $password, $dbw, $log, $secret);
 			if($token === false)
 			{
 				$log -> addInfo("User " . $name . " not found");
