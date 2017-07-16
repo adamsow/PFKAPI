@@ -72,8 +72,7 @@
 		$log = $app->log;
 		try
 		{
-			$req = $app->request;
-			$referer = $req->getReferrer();
+			$referer = $app->request->getReferrer();
 			if(strrpos($referer, "https://pfk.org.pl") === false)
 			{
 				$app->response->status(401);
@@ -107,8 +106,7 @@
 		$log = $app->log;
 		try
 		{
-			$req = $app->request;
-			$referer = $req->getReferrer();
+			$referer = $app->request->getReferrer();
 			if(strrpos($referer, "https://pfk.org.pl") === false)
 			{
 				$app->response->status(401);
@@ -131,8 +129,7 @@
 		$log = $app->log;
 		try
 		{
-			$req = $app->request;
-			$referer = $req->getReferrer();
+			$referer = $app->request->getReferrer();
 			if(strrpos($referer, "https://pfk.org.pl") === false)
 			{
 				$app->response->status(401);
@@ -155,8 +152,7 @@
 		$log = $app->log;
 		try
 		{
-			$req = $app->request;
-			$referer = $req->getReferrer();
+			$referer = $app->request->getReferrer();
 			if(strrpos($referer, "https://pfk.org.pl") === false)
 			{
 				$app->response->status(401);
@@ -175,26 +171,27 @@
 	
 	//POST exhibition data
 	$app->post('/exhibition', function () use ($app) 
-	{
-		$body = $app->request->getBody();
+	{	
 		$log = $app->log;
 		try
 		{
-			$req = $app->request;
-			$referer = $req->getReferrer();
+			$referer = $app->request->getReferrer();
 			if(strrpos($referer, "https://pfk.org.pl") === false)
 			{
 				//$app->response->status(401);
 				//return;
 			}
 			$db = $app->db;			
-			//$exhibitionData = GetExhibitionData($db, $log);
-			echo $body;
+			$body = $app->request->getBody();
+			$result = SaveExhibitionData($db, $log, $body);
+			
+			echo $result;
 		}
 		catch(Exception $e)
 		{
 			$log -> addError($e->getMessage());
 			$app->response->status(500);
+			echo $e->getMessage();
 		}
 	});
 	
