@@ -9,7 +9,7 @@
 	//set up logging
 	$app->container->singleton('log', function () {
 		$logger = new \Monolog\Logger('PFK_API');
-		$file_handler = new \Monolog\Handler\RotatingFileHandler("../logs/app.log", 3);
+		$file_handler = new \Monolog\Handler\RotatingFileHandler("../logs/app.log", 5);
 		$logger->pushHandler($file_handler);
 		return $logger;
 	});
@@ -79,17 +79,6 @@
 				return;
 			}
 			$db = $app->db;
-			/*if (in_array("administrator", $app->jwt->scope)) 
-			{
-				echo "super";
-			} 
-			else 
-			{
-				No scope so respond with 401 Unauthorized 
-				$app->response->status(401);
-			}
-			*/
-			
 			$breedings = GetBreedings($db, $log);
 			echo $breedings;
 		}
@@ -146,7 +135,7 @@
 		}
 	});
 	
-	//GET exhibition data
+	//GET exhibition data for form
 	$app->get('/exhibition', function () use ($app) 
 	{
 		$log = $app->log;
@@ -169,7 +158,7 @@
 		}
 	});
 	
-	//POST exhibition data
+	//POST exhibition data form
 	$app->post('/exhibition', function () use ($app) 
 	{	
 		$log = $app->log;
@@ -183,6 +172,7 @@
 			}
 			$db = $app->db;			
 			$payload = stripslashes($_POST["payload"]);
+			$log -> addInfo($payload);
 			$data = json_decode($payload);
 			$result = SaveExhibitionData($db, $log, $data);
 			
@@ -196,6 +186,7 @@
 		}
 	});
 	
+	//GET token
 	$app->get('/token/:name/:password', function ($name, $password) use ($app) 
 	{
 		try
@@ -216,6 +207,39 @@
 					
 			echo json_encode($token);
 		}	
+		catch(Exception $e)
+		{
+			$log -> addError($e->getMessage());
+			$app->response->status(500);
+		}
+	});
+	
+	//GET exhibitions data 
+	$app->get('/exhibitions/:filter', function ($filter) use ($app) 
+	{
+		$log = $app->log;
+		try
+		{
+			$referer = $app->request->getReferrer();
+			if(strrpos($referer, "https://pfk.org.pl") === false)
+			{
+				//$app->response->status(401);
+				//return;
+			}
+			$db = $app->db;
+			if (in_array("administrator", $app->jwt->scope)) 
+			{
+				$exhibitions = GetExhibitionsForAdmin($db, $log, $filter);
+			} 
+			else 
+			{
+				$app->response->status(401);
+				echo json_encode($err['errors']['UnauthorizedAccess']);
+				return;
+			}
+			
+			echo $exhibitions;
+		}
 		catch(Exception $e)
 		{
 			$log -> addError($e->getMessage());

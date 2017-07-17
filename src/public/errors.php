@@ -1,8 +1,11 @@
 <?php
-return array(
-    'errors' => array(
-        'UserNotFound' => array(
+return [
+    'errors' => [
+        'UserNotFound' => [
         	'Error' => 'Wrong username or password.'
-        	),
-        )
-);
+        	],
+		'UnauthorizedAccess' => [
+        	'Error' => 'Unauthorized.'
+        	],
+        ]
+];
