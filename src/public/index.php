@@ -175,6 +175,7 @@
 			$log -> addInfo($payload);
 			$data = json_decode($payload);
 			$result = SaveExhibitionData($db, $log, $data);
+			$log -> addInfo($result);
 			
 			echo $result;
 		}
