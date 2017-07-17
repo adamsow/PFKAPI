@@ -1,7 +1,8 @@
 ﻿<?php
 function checkFullname($fullname) {
+		error_reporting(E_ALL);
 	$fullname = replaceChars($fullname);
-	if(!ereg("^[ A-Za-z&ĘÓĽŁŻŃĆęóšłżćńÁÂÄÇÉËÔÖÓÜÚÝÜÝßâäáäăçëéÍÎíîôöőóúüůűý.,\'-]{2,50}$", $fullname)) 
+	if(!preg_match("/^[ A-Za-z&ĘÓĽŁŻŃĆęóšłżćńÁÂÄÇÉËÔÖÓÜÚÝÜÝßâäáäăçëéÍÎíîôöőóúüůűý.,\'-]{2,50}$/", $fullname)) 
 		return false; 
 	if($fullname[0]=="-" || $fullname[strlen($fullname)-1]=="-") 
 		return false; 
@@ -10,7 +11,7 @@ function checkFullname($fullname) {
 }
 
 function checkBirthDate($birthDate) {
-	if(!ereg ('^[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}$', $birthDate)) 
+	if(!preg_match ("/^[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}$/", $birthDate)) 
 		return false;
 
 	list($year,$month,$day)=explode('-',$birthDate);
@@ -28,7 +29,7 @@ function checkBirthDate($birthDate) {
 
 function checkTitle($title) {
 	$title = replaceChars($title);
-	if(!ereg('^[ A-Za-zĘÓĽŁŻŃĆęóšłżćńÁÂÄÇÉËÔÖÓÜÚÝÜÝßâäáäăçëéÍÎíîôöőóúüůűý.,-]{4,50}$', $title)) 
+	if(!preg_match("/^[ A-Za-zĘÓĽŁŻŃĆęóšłżćńÁÂÄÇÉËÔÖÓÜÚÝÜÝßâäáäăçëéÍÎíîôöőóúüůűý.,-]{4,50}$/", $title)) 
 		return false; 
 	
 	return true;
@@ -36,21 +37,21 @@ function checkTitle($title) {
 
 
 function checkTraining($training) {
-	if(!ereg('^[ A-Za-z0-9.:,/-]{3,50}$', $training)) 
+	if(!preg_match("/^[ A-Za-z0-9.:,\/-]{3,50}$/", $training)) 
 		return false;
 	
 	return true;
 }
 
 function checkLineage($lineage) {
-	if(!ereg('^[ A-Za-z0-9.:()/-]{3,30}$', $lineage)) 
+	if(!preg_match("/^[ A-Za-z0-9.:()\/-]{3,30}$/", $lineage)) 
 		return false; 
 	
 	return true;
 }
 
 function checkMarking($marking) {
-	if(!ereg('^[ A-Za-z0-9.:/-]{3,25}$', $marking)) 
+	if(!preg_match("/^[ A-Za-z0-9.:\/-]{3,25}$/", $marking)) 
 		return false; 
 	
 	return true;
@@ -58,7 +59,7 @@ function checkMarking($marking) {
 
 function checkName($name) {
 	$name = replaceChars($name);
-	if(!ereg("^[ A-Za-zĘÓĽŁŻŃĆęóšłżćńÁÂÄÇÉËÔÖÓÜÚÝÜÝßâäáäăçëéÍÎíîôöőóúüůűý.]{2,50}$", $name)) 
+	if(!preg_match("/^[ A-Za-zĘÓĽŁŻŃĆęóšłżćńÁÂÄÇÉËÔÖÓÜÚÝÜÝßâäáäăçëéÍÎíîôöőóúüůűý.]{2,50}$/", $name)) 
 		return false; 
 	
 	return true;
@@ -68,7 +69,7 @@ function checkStreet($address) {
 	$address = replaceChars($address);
 	$start = array('.', '-', '/');
 	$end = array('.', '-', '/');
-	if(!ereg("^[ A-Za-zĘÓĽŁŻŃĆęóšłżćńÁÂÄÇÉËÔÖÓÜÚÝÜÝßâäáäăçëéÍÎíîôöőóúüůűý0-9.,/-]{4,50}$", $address)) 
+	if(!preg_match("/^[ A-Za-zĘÓĽŁŻŃĆęóšłżćńÁÂÄÇÉËÔÖÓÜÚÝÜÝßâäáäăçëéÍÎíîôöőóúüůűý0-9.,\/-]{4,50}$/", $address)) 
 		return false; 
 	
 	for($i=0; $i<count($start); $i++) 
@@ -87,7 +88,7 @@ function checkStreet($address) {
 }
 
 function checkPostal($postal) {
-	if(!ereg('^[ A-Z0-9./-]{4,20}$', $postal)) 
+	if(!preg_match("/^[ A-Z0-9.\/-]{4,20}$/", $postal)) 
 		return false; 
 	
 	return true;
@@ -95,7 +96,7 @@ function checkPostal($postal) {
 
 function checkCity($city) {
 	$city = replaceChars($city);
-	if(!ereg("^[ A-Za-zĘÓĽŁŻŃĆęóšłżćńÁÂÄÇÉËÔÖÓÜÚÝÜÝßâäáäăçëéÍÎíîôöőóúüůűý-]{2,50}$", $city)) 
+	if(!preg_match("/^[ A-Za-zĘÓĽŁŻŃĆęóšłżćńÁÂÄÇÉËÔÖÓÜÚÝÜÝßâäáäăçëéÍÎíîôöőóúüůűý-]{2,50}$/", $city)) 
 		return false; 
 	
 	if($city[0]=="-" or $city[strlen($city)-1]=="-") 
@@ -105,7 +106,7 @@ function checkCity($city) {
 }
 
 function checkMobile($mobile) {
-	if(!ereg("^[ 0-9wewlub().+#p*-]{7,50}$", $mobile)) 
+	if(!preg_match("/^[ 0-9wewlub().+#p*-]{7,50}$/", $mobile)) 
 		return false; 
 	
 	if($mobile[0]=="-" 
@@ -127,7 +128,7 @@ function checkMobile($mobile) {
 }
 
 function checkEmail($email) {
-	if(!eregi("^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,4})$", $email)) 
+	if(!preg_match("/^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,4})$/i", $email)) 
 		return false; 
 	
 	return true;
@@ -137,5 +138,6 @@ function replaceChars($word) {
 	$locals = array("ą", "Ą", "ś", "Ś", "ź", "Ź",);
 	$normal = array("a", "A", "s", "S", "z", "Z");
 	$word = str_replace($locals, $normal, $word);
+	
 	return $word;
 }

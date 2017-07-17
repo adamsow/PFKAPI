@@ -98,12 +98,9 @@ function GetExhibitionData($db, $log)
 	return $result;
 }
 
-function SaveExhibitionData($db, $log, $body)
+function SaveExhibitionData($db, $log, $data)
 {
 	$log -> addInfo("Saving exhibition data.");
-	$log -> addInfo("$body");
-	$data = stripslashes($body);
-	$data = json_decode($data);
 	if(!checkData($data))
 		return "validation_error";
 	
@@ -171,6 +168,10 @@ function SaveExhibitionData($db, $log, $body)
 	
 	$stmt->execute();
 	
+	$message = PrepareExhibiotnMessage($data);
+	$fullname = $data->ownerName . " " . $data->ownerSurname;
+	SendEmail($data->ownerEmail, $fullname, $message, "Zgłoszenie na wystawę", "wystawy@pfk.org.pl", "Wystawy PFK", "!?abcTUPO657?");
+
 	return "OK";
 }
 
@@ -219,6 +220,7 @@ function GetToken($username, $password, $dbw, $log, $secret)
 function checkData($data)
 {
 	require_once('regexFunctions.php');
+
 	if($data->nickname == '' 
 		|| checkFullname($data->nickname)===false
 		|| $data->exhibition == ''
@@ -344,4 +346,118 @@ function GetClass($class)
 		default:
 			return 'baby';
 	}
+}
+
+function PrepareExhibiotnMessage($data)
+{
+	$message = iconv("Windows-1250", "UTF-8", file_get_contents('email-templates/wystawa.html'));
+	$memberYesNo = 'Nie';
+		if($data->isMember == 'true')
+			$memberYesNo = 'Tak';
+		$bestStudYesNo = 'Nie';
+		if($data->isBestStud == 'true'){
+			$bestStudYesNo = 'Tak';
+			$message = str_replace("{BestStudVisible}", "display:block;", $message);
+		}
+		else{
+			$message = str_replace("{BestStudVisible}", "display:none;", $message);
+		}
+		$bestBitchYesNo = 'Nie';
+		if($data->isBestBitch == 'true'){
+			$bestBitchYesNo = 'Tak';
+			$message = str_replace("{BestBitchVisible}", "display:block;", $message);
+		}
+		else{
+			$message = str_replace("{BestBitchVisible}", "display:none;", $message);
+		}
+		$bestPairYesNo = 'Nie';
+		if($data->isBestPair == 'true'){
+			$bestPairYesNo = 'Tak';
+			$message = str_replace("{BestPairVisible}", "display:block;", $message);
+		}
+		else{
+			$message = str_replace("{BestPairVisible}", "display:none;", $message);
+		}
+		$bestKennelYesNo = 'Nie';
+		if($data->isBestKennel == 'true'){
+			$bestKennelYesNo = 'Tak';
+			$message = str_replace("{BestKennelVisible}", "display:block;", $message);
+		}
+		else{
+			$message = str_replace("{BestKennelVisible}", "display:none;", $message);
+		}
+
+		$message = str_replace("{Name}", $data->exFullName, $message);
+		$message = str_replace("{Class}", $data->className, $message);
+		$message = str_replace("{Nickname}", $data->nickname, $message);
+		$message = str_replace("{Sex}", $data->sex, $message);
+		$message = str_replace("{BirthDate}", $data->birthDate, $message);
+		$message = str_replace("{Breed}", $data->breedName, $message);
+		$message = str_replace("{Color}", $data->colorName, $message);
+		$message = str_replace("{Lineage}", $data->lineage, $message);
+		$message = str_replace("{Marking}", $data->marking, $message);
+		$message = str_replace("{Titles}", $data->titles, $message);
+		$message = str_replace("{Training}", $data->training, $message);
+		$message = str_replace("{Father}", $data->father, $message);
+		$message = str_replace("{Mother}", $data->mother, $message);
+		$message = str_replace("{BreederName}", $data->breederName, $message);
+		$message = str_replace("{BreederSurname}", $data->breederSurname, $message);
+		$message = str_replace("{OwnerName}", $data->ownerName, $message);
+		$message = str_replace("{OwnerSurname}", $data->ownerSurname, $message);
+		$message = str_replace("{OwnerStreet}", $data->ownerStreet, $message);
+		$message = str_replace("{OwnerCity}", $data->ownerCity, $message);
+		$message = str_replace("{OwnerPostal}", $data->ownerPostal, $message);
+		$message = str_replace("{OwnerVoivodeship}", $data->ownerVoivodeship, $message);
+		$message = str_replace("{OwnerCountry}", $data->countryName, $message);
+		$message = str_replace("{OwnerEmail}", $data->ownerEmail, $message);
+		$message = str_replace("{OwnerMobile}", $data->ownerMobile, $message);
+		$message = str_replace("{IsMember}", $memberYesNo, $message);
+		$message = str_replace("{PsychoTest}", $data->psychoTest, $message);
+		$message = str_replace("{IsBestStud}", $bestStudYesNo, $message);
+		$message = str_replace("{stud1}", $data->stud1, $message);
+		$message = str_replace("{stud2}", $data->stud2, $message);
+		$message = str_replace("{stud3}", $data->stud3, $message);
+		$message = str_replace("{stud4}", $data->stud4, $message);
+		$message = str_replace("{stud5}", $data->stud5, $message);
+		$message = str_replace("{stud6}", $data->stud6, $message);
+		$message = str_replace("{IsBestBitch}", $bestBitchYesNo, $message);
+		$message = str_replace("{bitch1}", $data->bitch1, $message);
+		$message = str_replace("{bitch2}", $data->bitch2, $message);
+		$message = str_replace("{bitch3}", $data->bitch3, $message);
+		$message = str_replace("{bitch4}", $data->bitch4, $message);
+		$message = str_replace("{bitch5}", $data->bitch5, $message);
+		$message = str_replace("{bitch6}", $data->bitch6, $message);
+		$message = str_replace("{IsBestPair}", $bestPairYesNo, $message);
+		$message = str_replace("{pair1}", $data->pair1, $message);
+		$message = str_replace("{pair2}", $data->pair2, $message);
+		$message = str_replace("{IsBestKennel}", $bestKennelYesNo, $message);
+		$message = str_replace("{kennel1}", $data->kennel1, $message);
+		$message = str_replace("{kennel2}", $data->kennel2, $message);
+		$message = str_replace("{kennel3}", $data->kennel3, $message);
+		$message = str_replace("{kennel4}", $data->kennel4, $message);
+		$message = str_replace("{kennel5}", $data->kennel5, $message);
+		$message = str_replace("{kennel6}", $data->kennel6, $message);
+		
+		return $message;
+}
+
+function SendEmail($to, $toName, $message, $subject, $from, $fromName, $password)
+{
+	$mail = new PHPMailer();
+	$mail->IsSMTP();
+	$mail->CharSet = 'UTF-8';
+	$mail->Host       = "pfk-sieradz.atthouse.pl"; // SMTP server example
+	$mail->SMTPDebug  = 0;                     // enables SMTP debug information (for testing)
+	$mail->SMTPAuth   = true;                  // enable SMTP authentication
+	$mail->SMTPSecure = "ssl";
+	$mail->Port       = 465;                    // set the SMTP port for the GMAIL server
+	$mail->Username   = $from; // SMTP account username example
+	$mail->Password   = $password;        // SMTP account password example
+	$mail->SetFrom($from, $fromName);
+	$mail->AddReplyTo($from, $fromName);
+	$mail->Subject    = $subject;
+	$mail->AltBody    = "To view the message, please use an HTML compatible email viewer!";
+	$mail->MsgHTML($message);
+	$mail->AddAddress($to, $toName);
+	$mail->Send();
 }

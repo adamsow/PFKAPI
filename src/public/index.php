@@ -182,8 +182,9 @@
 				//return;
 			}
 			$db = $app->db;			
-			$body = $app->request->getBody();
-			$result = SaveExhibitionData($db, $log, $body);
+			$payload = stripslashes($_POST["payload"]);
+			$data = json_decode($payload);
+			$result = SaveExhibitionData($db, $log, $data);
 			
 			echo $result;
 		}
