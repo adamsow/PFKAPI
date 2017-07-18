@@ -245,4 +245,6 @@ function SendEmail($to, $toName, $message, $subject, $from, $fromName, $password
 		$mail->AddAddress($from, $from);
 	}
 	$mail->Send();
+	
+	
 }

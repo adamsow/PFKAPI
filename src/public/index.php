@@ -167,8 +167,8 @@
 			$referer = $app->request->getReferrer();
 			if(strrpos($referer, "https://pfk.org.pl") === false)
 			{
-				//$app->response->status(401);
-				//return;
+				$app->response->status(401);
+				return;
 			}
 			$db = $app->db;			
 			$payload = stripslashes($_POST["payload"]);
