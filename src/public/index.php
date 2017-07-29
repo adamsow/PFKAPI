@@ -2,7 +2,8 @@
 	header('Content-Type: text/javascript; charset=utf8');
 	date_default_timezone_set('Europe/Warsaw');
 	require '../vendor/autoload.php';
-	$settings = require '../private/local.php';
+	$err = require_once('errors.php');
+	$settings = require_once '../private/local.php';
 	include('functions.php');
 
 	$app = new \Slim\Slim($settings);
@@ -73,7 +74,7 @@
 		try
 		{
 			$referer = $app->request->getReferrer();
-			if(strrpos($referer, "https://pfk.org.pl") === false)
+			if(CheckReferer($referer) === false)
 			{
 				$app->response->status(401);
 				return;
@@ -96,7 +97,7 @@
 		try
 		{
 			$referer = $app->request->getReferrer();
-			if(strrpos($referer, "https://pfk.org.pl") === false)
+			if(CheckReferer($referer) === false)
 			{
 				$app->response->status(401);
 				return;
@@ -119,7 +120,7 @@
 		try
 		{
 			$referer = $app->request->getReferrer();
-			if(strrpos($referer, "https://pfk.org.pl") === false)
+			if(CheckReferer($referer) === false)
 			{
 				$app->response->status(401);
 				return;
@@ -142,7 +143,7 @@
 		try
 		{
 			$referer = $app->request->getReferrer();
-			if(strrpos($referer, "https://pfk.org.pl") === false)
+			if(CheckReferer($referer) === false)
 			{
 				$app->response->status(401);
 				return;
@@ -165,17 +166,16 @@
 		try
 		{
 			$referer = $app->request->getReferrer();
-			if(strrpos($referer, "https://pfk.org.pl") === false)
+			if(CheckReferer($referer) === false)
 			{
-				$app->response->status(401);
-				return;
+				//$app->response->status(401);
+				//return;
 			}
 			$db = $app->db;			
 			$payload = stripslashes($_POST["payload"]);
 			$log -> addInfo($payload);
 			$data = json_decode($payload);
 			$result = SaveExhibitionData($db, $log, $data);
-			$log -> addInfo($result);
 			
 			echo $result;
 		}
@@ -190,10 +190,15 @@
 	//GET token
 	$app->get('/token/:name/:password', function ($name, $password) use ($app) 
 	{
+		$log = $app->log;
 		try
 		{
-			$err = require_once('errors.php');
-			$log = $app->log;
+			$referer = $app->request->getReferrer();
+			if(CheckReferer($referer) === false)
+			{
+				$app->response->status(401);
+				return;
+			}
 			$dbw = $app->dbw;
 			$secret = $app->secret;
 
@@ -222,24 +227,281 @@
 		try
 		{
 			$referer = $app->request->getReferrer();
-			if(strrpos($referer, "https://pfk.org.pl") === false)
+			if(CheckReferer($referer) === false)
 			{
-				//$app->response->status(401);
-				//return;
+				$app->response->status(401);
+				return;
 			}
 			$db = $app->db;
-			if (in_array("administrator", $app->jwt->scope)) 
+			$scope = $app->jwt->scope;
+			$access = GetAccess($scope, '/Centrala/Wystawy', $db, $log);
+			if($access !== NULL && $access !== "NO ACCESS")
 			{
-				$exhibitions = GetExhibitionsForAdmin($db, $log, $filter);
-			} 
+				$exhibitions = GetExhibitions($db, $log, $filter);
+			}
 			else 
 			{
 				$app->response->status(401);
 				echo json_encode($err['errors']['UnauthorizedAccess']);
 				return;
 			}
-			
-			echo $exhibitions;
+
+			echo '{"access":"' . $access . '","exhibitions":' . $exhibitions . '}';
+		}
+		catch(Exception $e)
+		{
+			$log -> addError($e->getMessage());
+			$app->response->status(500);
+		}
+	});
+	
+	//Insert new exhibition 
+	$app->post('/exhibitions', function () use ($app) 
+	{
+		$log = $app->log;
+		try
+		{
+			$referer = $app->request->getReferrer();
+			if(CheckReferer($referer) === false)
+			{
+				$app->response->status(401);
+				return;
+			}
+			$db = $app->db;
+			$scope = $app->jwt->scope;
+			$access = GetAccess($scope, '/Centrala/Wystawy', $db, $log);
+			if(HasWriteAccess($access))
+			{
+				$body = $app->request->getBody();
+				$userId = $app->jwt->user_id;
+				$data = json_decode($body);
+				$result = AddExhibition($data, $db, $log, $userId);
+				echo $result;
+			}
+			else 
+			{
+				$app->response->status(401);
+				echo json_encode($err['errors']['UnauthorizedAccess']);
+				return;
+			}
+		}
+		catch(Exception $e)
+		{
+			$log -> addError($e->getMessage());
+			$app->response->status(500);
+		}
+	});
+	
+	//Update existing exhibition 
+	$app->put('/exhibitions', function () use ($app) 
+	{
+		$log = $app->log;
+		try
+		{
+			$referer = $app->request->getReferrer();
+			if(CheckReferer($referer) === false)
+			{
+				$app->response->status(401);
+				return;
+			}
+			$db = $app->db;
+			$scope = $app->jwt->scope;
+			$access = GetAccess($scope, '/Centrala/Wystawy', $db, $log);
+			if(HasWriteAccess($access))
+			{
+				$body = $app->request->getBody();
+				$userId = $app->jwt->user_id;
+				$data = json_decode($body);
+				$result = UpdateExhibition($data, $db, $log, $userId);
+				echo $result;
+			}
+			else 
+			{
+				$app->response->status(401);
+				echo json_encode($err['errors']['UnauthorizedAccess']);
+				return;
+			}
+		}
+		catch(Exception $e)
+		{
+			$log -> addError($e->getMessage());
+			$app->response->status(500);
+		}
+	});
+	
+	//Delete exhibition 
+	$app->delete('/exhibitions/:id', function ($id) use ($app) 
+	{
+		$log = $app->log;
+		try
+		{
+			$referer = $app->request->getReferrer();
+			if(CheckReferer($referer) === false)
+			{
+				$app->response->status(401);
+				return;
+			}
+			$db = $app->db;
+			$scope = $app->jwt->scope;
+			$access = GetAccess($scope, '/Centrala/Wystawy', $db, $log);
+			if(HasAllAccess($access))
+			{
+				$userId = $app->jwt->user_id;
+				$data = json_decode($body);
+				$result = RemoveExhibition($id, $db, $log, $userId);
+				echo $result;
+			}
+			else 
+			{
+				$app->response->status(401);
+				echo json_encode($err['errors']['UnauthorizedAccess']);
+				return;
+			}
+		}
+		catch(Exception $e)
+		{
+			$log -> addError($e->getMessage());
+			$app->response->status(500);
+		}
+	});
+	
+	//GET exhibition by ID 
+	$app->get('/exhibitionById/:id', function ($id) use ($app) 
+	{
+		$log = $app->log;
+		try
+		{
+			$referer = $app->request->getReferrer();
+			if(CheckReferer($referer) === false)
+			{
+				$app->response->status(401);
+				return;
+			}
+			$db = $app->db;
+			$dbw = $app->dbw;
+			$scope = $app->jwt->scope;
+			$access = GetAccess($scope, '/Centrala/Wystawy', $db, $log);
+			if($access !== NULL && $access !== "NO ACCESS")
+			{
+				$exhibition = GetExhibitionById($db, $log, $id, $dbw);
+			}
+			else 
+			{
+				$app->response->status(401);
+				echo json_encode($err['errors']['UnauthorizedAccess']);
+				return;
+			}		
+
+			echo $exhibition;
+		}
+		catch(Exception $e)
+		{
+			$log -> addError($e->getMessage());
+			$app->response->status(500);
+		}
+	});
+	
+	//GET departments 
+	$app->get('/departments', function () use ($app) 
+	{
+		$log = $app->log;
+		try
+		{
+			$referer = $app->request->getReferrer();
+			if(CheckReferer($referer) === false)
+			{
+				$app->response->status(401);
+				return;
+			}
+			$db = $app->db;
+			$scope = $app->jwt->scope;
+			$access = GetAccess($scope, '/Centrala/Wystawy', $db, $log);
+			if($access !== NULL && $access !== "NO ACCESS")
+			{
+				$departments = GetDepartments($db, $log);
+			}
+			else 
+			{
+				$app->response->status(401);
+				echo json_encode($err['errors']['UnauthorizedAccess']);
+				return;
+			}		
+
+			echo $departments;
+		}
+		catch(Exception $e)
+		{
+			$log -> addError($e->getMessage());
+			$app->response->status(500);
+		}
+	});
+	
+	//GET roles for manage access page
+	$app->get('/roles', function () use ($app) 
+	{
+		$log = $app->log;
+		try
+		{
+			$referer = $app->request->getReferrer();
+			if(CheckReferer($referer) === false)
+			{
+				$app->response->status(401);
+				echo json_encode($err['errors']['UnauthorizedAccess']);
+				return;
+			}
+			$dbw = $app->dbw;
+			$db = $app->db;
+			$scope = $app->jwt->scope;
+			if (in_array("administrator", $scope)) 
+			{
+				$roles = GetRoles($dbw, $log);
+				$sites = GetApiSites($db, $log);
+				$assignments = GetRoleAssignments($db, $log);
+			}
+			else 
+			{
+				$app->response->status(401);
+				echo json_encode($err['errors']['UnauthorizedAccess']);
+				return;
+			}		
+
+			echo '{"roles":' . $roles . ',"sites":' . $sites . ',"assignments":' . $assignments . '}';
+		}
+		catch(Exception $e)
+		{
+			$log -> addError($e->getMessage());
+			$app->response->status(500);
+		}
+	});
+	
+	//POST access rights for API pages
+	$app->post('/roles', function () use ($app) 
+	{
+		$log = $app->log;
+		try
+		{
+			$referer = $app->request->getReferrer();
+			if(CheckReferer($referer) === false)
+			{
+				$app->response->status(401);
+				echo json_encode($err['errors']['UnauthorizedAccess']);
+				return;
+			}
+			$db = $app->db;
+			$scope = $app->jwt->scope;
+			if (in_array("administrator", $scope)) 
+			{
+				$body = $app->request->getBody();
+				$data = json_decode($body);
+				$result = SaveRoles($data, $db, $log);
+				echo $result;
+			}
+			else 
+			{
+				$app->response->status(401);
+				echo json_encode($err['errors']['UnauthorizedAccess']);
+				return;
+			}		
 		}
 		catch(Exception $e)
 		{

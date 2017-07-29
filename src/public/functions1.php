@@ -1,6 +1,6 @@
 <?php
 use \Firebase\JWT\JWT;
-include_once('helperFunctions.php');
+include_once('helperFunctions1.php');
 
 function GetBreedings($db, $log)
 {
@@ -373,7 +373,7 @@ function HasAllAccess($access)
 function AddExhibition($data, $db, $log, $userId)
 {
 	$log -> addInfo("Adding new exhibition: " . $data->name);
-	$shortName = "wystawa-" . $data->date;
+	$shortName = "wystawa" . $data->date;
 	$stmt = $db->prepare("INSERT INTO wystawa (pelna_nazwa, nazwa, rodzaj, miejscowosc, oddzial, data, creator, created, changed, changed_by, zgloszenia_otwarte)
 							VALUES (:fullExName, :name, :rang, :city, :department, :date, :createdBy, NOW(), NOW(), :createdBy, :status);");
 	$stmt->bindParam(':fullExName', $data->name);
