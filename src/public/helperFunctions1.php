@@ -1,15 +1,15 @@
 <?php
+require_once('regexFunctions.php');
+
 function checkExhibitionFormData($data)
 {
-	require_once('regexFunctions.php');
-
 	if($data->nickname == '' 
 		|| checkFullname($data->nickname)===false
 		|| $data->exhibition == ''
 		|| $data->class == ''
 		|| $data->sex == ''
 		|| $data->birthDate == ''
-		|| checkBirthDate($data->birthDate) === false
+		|| checkIfDateInPastOrToday($data->birthDate) === false
 		|| $data->breed == ''
 		|| $data->color == ''
 		|| ($data->titles != '' && checkTitle($data->titles) === false) 
@@ -42,6 +42,7 @@ function checkExhibitionFormData($data)
 		|| checkCity($data->ownerVoivodeship) === false
 		|| $data->ownerCountry == ''
 		|| ($data->ownerMobile != '' && checkMobile($data->ownerMobile) === false)
+		|| ($data->additionalInfo != '' && checkAdditionalInfo($data->additionalInfo) === false)
 		|| $data->ownerEmail == ''
 		|| checkEmail($data->ownerEmail) === false
 		|| $data->isMember == ''
@@ -247,4 +248,133 @@ function SendEmail($to, $toName, $message, $subject, $from, $fromName, $password
 		$mail->AddAddress($from, $from);
 	}
 	$mail->Send();	
+}
+
+function CheckNewExhibitionData($data)
+{
+	if($data->city == '' 
+		|| checkCity($data->city)===false
+		|| $data->name == ''
+		|| checkExhibitionName($data->name) === false
+		|| $data->rang == ''
+		|| $data->status == ''
+		|| $data->department == ''
+		|| $data->date == ''
+		)
+		{
+			return false;
+		}
+		
+	return true;
+}
+
+function CheckUpdateExhibitionData($data)
+{
+	if($data->id == '' 
+		|| !CheckNewExhibitionData($data)
+		)
+		{
+			return false;
+		}
+		
+	return true;
+}
+
+function GetBreeds($db)
+{
+	$stmt = $db->prepare("SELECT id_rasa as id, rasa as name FROM rasa ORDER BY rasa;");
+	$stmt->execute();
+	return $stmt->fetchAll();
+}
+
+function GetColors($db)
+{
+	$stmt = $db->prepare("SELECT id_masc as id, masc as name FROM masc ORDER BY masc;");
+	$stmt->execute();
+	return $stmt->fetchAll();
+}	
+
+function GetCountries($db)
+{
+	$stmt = $db->prepare("SELECT id_panstwo as id, kraj as name FROM panstwo;");
+	$stmt->execute();
+	return $stmt->fetchAll();
+}
+
+function AddNewParticipant($data, $db, $isFromForm, $userId)
+{
+	$classString = GetClass($data->class);
+	$stmt = $db->prepare("
+		INSERT INTO Uczestnicy (wystawa_id, fullname, plec, data_ur, rasa, masc, klasa, data_zg, tytul, wyszkolenie, nr_rod, oznakowanie, sire, dam, hod_imie, 
+		hod_nazwisko, imie, nazwisko, ulica, kod, miejscowosc, region, panstwo, tel, email, czlonek, testy_psych, reproduktor1, reproduktor2, reproduktor3, reproduktor4, 
+		reproduktor5, reproduktor6, suka1, suka2, suka3, suka4, suka5, suka6, para1, para2, hodowlana1, hodowlana2, hodowlana3, hodowlana4, hodowlana5, hodowlana6, 
+		adnotacje, zatwierdzono, changed, changed_by, created_by, ocena, lokata, certyfikat, tytuly) 
+		VALUES (:id, :nickname, :sex, :birthDate, :breed, :color, :class, NOW(), :titles, :training, :lineage, :marking, :father, :mother, :breederName, :breederSurname, 
+		:ownerName, :ownerSurname, :ownerStreet, :ownerPostal, :ownerCity, :ownerVoivodeship, :ownerCountry, :ownerMobile, :ownerEmail, :member, :psychoTest, :stud1, :stud2, 
+		:stud3, :stud4, :stud5, :stud6, :bitch1, :bitch2, :bitch3, :bitch4, :bitch5, :bitch6, :pair1, :pair2, :kennel1, :kennel2, :kennel3, :kennel4, :kennel5, :kennel6, 
+		:additionalInfo, :isAccepted, NOW(), :userId, :userId, :mark, :place, :certificate, :exTitles);
+		");
+	
+	$stmt->bindParam(':id', $data->exhibition);
+	$stmt->bindParam(':nickname', $data->nickname);
+	$stmt->bindParam(':sex', $data->sex);
+	$stmt->bindParam(':birthDate', $data->birthDate);
+	$stmt->bindParam(':breed', $data->breed);
+	$stmt->bindParam(':color', $data->color);
+	$stmt->bindParam(':class', $classString);
+	$stmt->bindParam(':titles', $data->titles);
+	$stmt->bindParam(':training', $data->training);
+	$stmt->bindParam(':lineage', $data->lineage);
+	$stmt->bindParam(':marking', $data->marking);
+	$stmt->bindParam(':father', $data->father);
+	$stmt->bindParam(':mother', $data->mother);
+	$stmt->bindParam(':breederName', $data->breederName);
+	$stmt->bindParam(':breederSurname', $data->breederSurname);
+	$stmt->bindParam(':ownerName', $data->ownerName);
+	$stmt->bindParam(':ownerSurname', $data->ownerSurname);
+	$stmt->bindParam(':ownerStreet', $data->ownerStreet);
+	$stmt->bindParam(':ownerPostal', $data->ownerPostal);
+	$stmt->bindParam(':ownerCity', $data->ownerCity);
+	$stmt->bindParam(':ownerVoivodeship', $data->ownerVoivodeship);
+	$stmt->bindParam(':ownerCountry', $data->ownerCountry);
+	$stmt->bindParam(':ownerMobile', $data->ownerMobile);
+	$stmt->bindParam(':ownerEmail', $data->ownerEmail);
+	$stmt->bindParam(':member', $data->isMember);
+	$stmt->bindParam(':psychoTest', $data->psychoTest);
+	$stmt->bindParam(':stud1', $data->stud1);
+	$stmt->bindParam(':stud2', $data->stud2);
+	$stmt->bindParam(':stud3', $data->stud3);
+	$stmt->bindParam(':stud4', $data->stud4);
+	$stmt->bindParam(':stud5', $data->stud5);
+	$stmt->bindParam(':stud6', $data->stud6);
+	$stmt->bindParam(':bitch1', $data->bitch1);
+	$stmt->bindParam(':bitch2', $data->bitch2);
+	$stmt->bindParam(':bitch3', $data->bitch3);
+	$stmt->bindParam(':bitch4', $data->bitch4);
+	$stmt->bindParam(':bitch5', $data->bitch5);
+	$stmt->bindParam(':bitch6', $data->bitch6);
+	$stmt->bindParam(':pair1', $data->pair1);
+	$stmt->bindParam(':pair2', $data->pair2);
+	$stmt->bindParam(':kennel1', $data->kennel1);
+	$stmt->bindParam(':kennel2', $data->kennel2);
+	$stmt->bindParam(':kennel3', $data->kennel3);
+	$stmt->bindParam(':kennel4', $data->kennel4);
+	$stmt->bindParam(':kennel5', $data->kennel5);
+	$stmt->bindParam(':kennel6', $data->kennel6);
+	$stmt->bindParam(':userId', $userId);
+	$stmt->bindParam(':additionalInfo', $data->additionalInfo);
+	$stmt->bindParam(':mark', $data->mark);
+	$stmt->bindParam(':place', $data->place);
+	$stmt->bindParam(':certificate', $data->certificate);
+	$stmt->bindParam(':exTitles', $data->exTitles);
+	if($isFromForm)
+	{
+		$stmt->bindParam(':isAccepted', 'nie');
+	}
+	else
+	{
+		$stmt->bindParam(':isAccepted', $data->isAccepted);
+	}
+	
+	$stmt->execute();
 }

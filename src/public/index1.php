@@ -2,11 +2,14 @@
 	header('Content-Type: text/javascript; charset=utf8');
 	date_default_timezone_set('Europe/Warsaw');
 	require '../vendor/autoload.php';
-	$err = require_once('errors.php');
+	$err = require_once 'errors.php';
+	$pages = require_once 'pages.php';
 	$settings = require_once '../private/local.php';
-	include('functions1.php');
+	include_once('functions1.php');
 
 	$app = new \Slim\Slim($settings);
+	$app->pages = $pages;
+	$app->err = $err;
 	//set up logging
 	$app->container->singleton('log', function () {
 		$logger = new \Monolog\Logger('PFK_API');
@@ -234,7 +237,7 @@
 			}
 			$db = $app->db;
 			$scope = $app->jwt->scope;
-			$access = GetAccess($scope, '/Centrala/Wystawy', $db, $log);
+			$access = GetAccess($scope, $app->pages['sites']['exhibitions'], $db, $log);
 			if($access !== NULL && $access !== "NO ACCESS")
 			{
 				$exhibitions = GetExhibitions($db, $log, $filter);
@@ -242,7 +245,7 @@
 			else 
 			{
 				$app->response->status(401);
-				echo json_encode($err['errors']['UnauthorizedAccess']);
+				echo json_encode($app->err['errors']['UnauthorizedAccess']);
 				return;
 			}
 
@@ -269,7 +272,7 @@
 			}
 			$db = $app->db;
 			$scope = $app->jwt->scope;
-			$access = GetAccess($scope, '/Centrala/Wystawy', $db, $log);
+			$access = GetAccess($scope, $app->pages['sites']['exhibitions'], $db, $log);
 			if(HasWriteAccess($access))
 			{
 				$body = $app->request->getBody();
@@ -281,7 +284,7 @@
 			else 
 			{
 				$app->response->status(401);
-				echo json_encode($err['errors']['UnauthorizedAccess']);
+				echo json_encode($app->err['errors']['UnauthorizedAccess']);
 				return;
 			}
 		}
@@ -306,7 +309,7 @@
 			}
 			$db = $app->db;
 			$scope = $app->jwt->scope;
-			$access = GetAccess($scope, '/Centrala/Wystawy', $db, $log);
+			$access = GetAccess($scope, $app->pages['sites']['exhibitions'], $db, $log);
 			if(HasWriteAccess($access))
 			{
 				$body = $app->request->getBody();
@@ -318,7 +321,7 @@
 			else 
 			{
 				$app->response->status(401);
-				echo json_encode($err['errors']['UnauthorizedAccess']);
+				echo json_encode($app->err['errors']['UnauthorizedAccess']);
 				return;
 			}
 		}
@@ -343,7 +346,7 @@
 			}
 			$db = $app->db;
 			$scope = $app->jwt->scope;
-			$access = GetAccess($scope, '/Centrala/Wystawy', $db, $log);
+			$access = GetAccess($scope, $app->pages['sites']['exhibitions'], $db, $log);
 			if(HasAllAccess($access))
 			{
 				$userId = $app->jwt->user_id;
@@ -354,7 +357,7 @@
 			else 
 			{
 				$app->response->status(401);
-				echo json_encode($err['errors']['UnauthorizedAccess']);
+				echo json_encode($app->err['errors']['UnauthorizedAccess']);
 				return;
 			}
 		}
@@ -380,7 +383,7 @@
 			$db = $app->db;
 			$dbw = $app->dbw;
 			$scope = $app->jwt->scope;
-			$access = GetAccess($scope, '/Centrala/Wystawy', $db, $log);
+			$access = GetAccess($scope, $app->pages['sites']['exhibitions'], $db, $log);
 			if($access !== NULL && $access !== "NO ACCESS")
 			{
 				$exhibition = GetExhibitionById($db, $log, $id, $dbw);
@@ -388,7 +391,7 @@
 			else 
 			{
 				$app->response->status(401);
-				echo json_encode($err['errors']['UnauthorizedAccess']);
+				echo json_encode($app->err['errors']['UnauthorizedAccess']);
 				return;
 			}		
 
@@ -415,7 +418,7 @@
 			}
 			$db = $app->db;
 			$scope = $app->jwt->scope;
-			$access = GetAccess($scope, '/Centrala/Wystawy', $db, $log);
+			$access = GetAccess($scope, $app->pages['sites']['exhibitions'], $db, $log);
 			if($access !== NULL && $access !== "NO ACCESS")
 			{
 				$departments = GetDepartments($db, $log);
@@ -423,7 +426,7 @@
 			else 
 			{
 				$app->response->status(401);
-				echo json_encode($err['errors']['UnauthorizedAccess']);
+				echo json_encode($app->err['errors']['UnauthorizedAccess']);
 				return;
 			}		
 
@@ -446,7 +449,7 @@
 			if(CheckReferer($referer) === false)
 			{
 				$app->response->status(401);
-				echo json_encode($err['errors']['UnauthorizedAccess']);
+				echo json_encode($app->err['errors']['UnauthorizedAccess']);
 				return;
 			}
 			$dbw = $app->dbw;
@@ -461,7 +464,7 @@
 			else 
 			{
 				$app->response->status(401);
-				echo json_encode($err['errors']['UnauthorizedAccess']);
+				echo json_encode($app->err['errors']['UnauthorizedAccess']);
 				return;
 			}		
 
@@ -484,7 +487,7 @@
 			if(CheckReferer($referer) === false)
 			{
 				$app->response->status(401);
-				echo json_encode($err['errors']['UnauthorizedAccess']);
+				echo json_encode($app->err['errors']['UnauthorizedAccess']);
 				return;
 			}
 			$db = $app->db;
@@ -499,9 +502,275 @@
 			else 
 			{
 				$app->response->status(401);
-				echo json_encode($err['errors']['UnauthorizedAccess']);
+				echo json_encode($app->err['errors']['UnauthorizedAccess']);
 				return;
 			}		
+		}
+		catch(Exception $e)
+		{
+			$log -> addError($e->getMessage());
+			$app->response->status(500);
+		}
+	});
+	
+	//GET exhibition participants 
+	$app->get('/participants/:id', function ($id) use ($app) 
+	{
+		$log = $app->log;
+		try
+		{
+			$referer = $app->request->getReferrer();
+			if(CheckReferer($referer) === false)
+			{
+				$app->response->status(401);
+				echo json_encode($app->err['errors']['UnauthorizedAccess']);
+				return;
+
+			}
+			$db = $app->db;
+			$scope = $app->jwt->scope;
+			$access = GetAccess($scope, $app->pages['sites']['exhibitions'], $db, $log);
+			if($access !== NULL && $access !== "NO ACCESS")
+			{
+				$participants = GetExhibitionParticipants($db, $log, $id);
+			}
+			else 
+			{
+				$app->response->status(401);
+				echo json_encode($app->err['errors']['UnauthorizedAccess']);
+				return;
+			}
+
+			echo '{"access":"' . $access . '","participants":' . $participants . '}';
+		}
+		catch(Exception $e)
+		{
+			$log -> addError($e->getMessage());
+			$app->response->status(500);
+		}
+	});
+	
+	//GET all info for exhibition (for csv files) 
+	$app->get('/participantsAll/:id/:filter', function ($id, $filter) use ($app) 
+	{
+		$log = $app->log;
+		try
+		{
+			$referer = $app->request->getReferrer();
+			if(CheckReferer($referer) === false)
+			{
+				$app->response->status(401);
+				echo json_encode($app->err['errors']['UnauthorizedAccess']);
+				return;
+			}
+			$db = $app->db;
+			$dbw = $app->dbw;
+			$scope = $app->jwt->scope;
+			$access = GetAccess($scope, $app->pages['sites']['exhibitions'], $db, $log);
+			if($access !== NULL && $access !== "NO ACCESS")
+			{
+				$participants = GetExhibitionParticipantsAll($db, $log, $id, $filter, $dbw);
+			}
+			else 
+			{
+				$app->response->status(401);
+				echo json_encode($app->err['errors']['UnauthorizedAccess']);
+				return;
+			}
+
+			echo $participants;
+		}
+		catch(Exception $e)
+		{
+			$log -> addError($e->getMessage());
+			$app->response->status(500);
+		}
+	});
+	
+	//GET all info for exhibition (for csv files) 
+	$app->get('/applicationConsts', function () use ($app) 
+	{
+		$log = $app->log;
+		try
+		{
+			$referer = $app->request->getReferrer();
+			if(CheckReferer($referer) === false)
+			{
+				$app->response->status(401);
+				echo json_encode($app->err['errors']['UnauthorizedAccess']);
+				return;
+			}
+			$db = $app->db;
+			$dbw = $app->dbw;
+			$scope = $app->jwt->scope;
+			$access = GetAccess($scope, $app->pages['sites']['exhibitions'], $db, $log);
+			if($access !== NULL && $access !== "NO ACCESS")
+			{
+				$consts = GetApplicationConsts($db, $log);
+			}
+			else 
+			{
+				$app->response->status(401);
+				echo json_encode($app->err['errors']['UnauthorizedAccess']);
+				return;
+			}
+
+			echo $consts;
+		}
+		catch(Exception $e)
+		{
+			$log -> addError($e->getMessage());
+			$app->response->status(500);
+		}
+	});
+	
+	//add new participant 
+	$app->post('/participants', function () use ($app) 
+	{
+		$log = $app->log;
+		try
+		{
+			$referer = $app->request->getReferrer();
+			if(CheckReferer($referer) === false)
+			{
+				$app->response->status(401);
+				echo json_encode($app->err['errors']['UnauthorizedAccess']);
+				return;
+			}
+			$db = $app->db;
+			$dbw = $app->dbw;
+			$scope = $app->jwt->scope;
+			$access = GetAccess($scope, $app->pages['sites']['exhibitions'], $db, $log);
+			if(HasWriteAccess($access))
+			{
+				$body = $app->request->getBody();
+				$userId = $app->jwt->user_id;
+				$data = json_decode($body);
+				$result = AddParticipant($data, $db, $log, $userId);
+				echo $result;
+			}
+			else 
+			{
+				$app->response->status(401);
+				echo json_encode($app->err['errors']['UnauthorizedAccess']);
+				return;
+			}
+
+			echo $consts;
+		}
+		catch(Exception $e)
+		{
+			$log -> addError($e->getMessage());
+			$app->response->status(500);
+		}
+	});
+	
+	//GET info about particiapnt 
+	$app->get('/participantById/:id', function ($id) use ($app) 
+	{
+		$log = $app->log;
+		try
+		{
+			$referer = $app->request->getReferrer();
+			if(CheckReferer($referer) === false)
+			{
+				$app->response->status(401);
+				echo json_encode($app->err['errors']['UnauthorizedAccess']);
+				return;
+			}
+			$db = $app->db;
+			$dbw = $app->dbw;
+			$scope = $app->jwt->scope;
+			$access = GetAccess($scope, $app->pages['sites']['exhibitions'], $db, $log);
+			if($access !== NULL && $access !== "NO ACCESS")
+			{
+				$participants = GetExhibitionParticipant($db, $log, $id, $dbw);
+			}
+			else 
+			{
+				$app->response->status(401);
+				echo json_encode($app->err['errors']['UnauthorizedAccess']);
+				return;
+			}
+
+			echo $participants;
+		}
+		catch(Exception $e)
+		{
+			$log -> addError($e->getMessage());
+			$app->response->status(500);
+		}
+	});
+	
+	//update existing participant 
+	$app->put('/participants/:id', function ($id) use ($app) 
+	{
+		$log = $app->log;
+		try
+		{
+			$referer = $app->request->getReferrer();
+			if(CheckReferer($referer) === false)
+			{
+				$app->response->status(401);
+				echo json_encode($app->err['errors']['UnauthorizedAccess']);
+				return;
+			}
+			$db = $app->db;
+			$dbw = $app->dbw;
+			$scope = $app->jwt->scope;
+			$access = GetAccess($scope, $app->pages['sites']['exhibitions'], $db, $log);
+			if(HasWriteAccess($access))
+			{
+				$body = $app->request->getBody();
+				$userId = $app->jwt->user_id;
+				$data = json_decode($body);
+				$result = UpdateParticipant($id, $data, $db, $log, $userId);
+				echo $result;
+			}
+			else 
+			{
+				$app->response->status(401);
+				echo json_encode($app->err['errors']['UnauthorizedAccess']);
+				return;
+			}
+
+			echo $consts;
+		}
+		catch(Exception $e)
+		{
+			$log -> addError($e->getMessage());
+			$app->response->status(500);
+		}
+	});
+	
+	//Delete participant 
+	$app->delete('/participants/:id', function ($id) use ($app) 
+	{
+		$log = $app->log;
+		try
+		{
+			$referer = $app->request->getReferrer();
+			if(CheckReferer($referer) === false)
+			{
+				$app->response->status(401);
+				return;
+			}
+			$db = $app->db;
+			$scope = $app->jwt->scope;
+			$access = GetAccess($scope, $app->pages['sites']['exhibitions'], $db, $log);
+			if(HasAllAccess($access))
+			{
+				$userId = $app->jwt->user_id;
+				$data = json_decode($body);
+				$result = RemoveParticipant($id, $db, $log, $userId);
+				echo $result;
+			}
+			else 
+			{
+				$app->response->status(401);
+				echo json_encode($app->err['errors']['UnauthorizedAccess']);
+				return;
+			}
 		}
 		catch(Exception $e)
 		{

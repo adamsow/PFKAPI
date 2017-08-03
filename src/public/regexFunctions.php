@@ -1,6 +1,5 @@
 ﻿<?php
 function checkFullname($fullname) {
-		error_reporting(E_ALL);
 	$fullname = replaceChars($fullname);
 	if(!preg_match("/^[ A-Za-z&ĘÓĽŁŻŃĆęóšłżćńÁÂÄÇÉËÔÖÓÜÚÝÜÝßâäáäăçëéÍÎíîôöőóúüůűý.,\'-]{2,50}$/", $fullname)) 
 		return false; 
@@ -10,11 +9,19 @@ function checkFullname($fullname) {
 	return true;
 }
 
-function checkBirthDate($birthDate) {
-	if(!preg_match ("/^[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}$/", $birthDate)) 
+function checkDateRegex($date)
+{
+	if(!preg_match ("/^[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}$/", $date)) 
+		return false;
+	
+	return true;
+}
+
+function checkIfDateInPastOrToday($date) {
+	if(!checkDateRegex($date)) 
 		return false;
 
-	list($year,$month,$day)=explode('-',$birthDate);
+	list($year,$month,$day)=explode('-',$date);
 	$today = getdate();
 	$dm = $today['mon']; $dd = $today['mday']; $dr = $today['year'];
 	if($dr<$year) 
@@ -30,6 +37,15 @@ function checkBirthDate($birthDate) {
 function checkTitle($title) {
 	$title = replaceChars($title);
 	if(!preg_match("/^[ A-Za-zĘÓĽŁŻŃĆęóšłżćńÁÂÄÇÉËÔÖÓÜÚÝÜÝßâäáäăçëéÍÎíîôöőóúüůűý.,-]{4,50}$/", $title)) 
+		return false; 
+	
+	return true;
+}
+
+function checkExhibitionName($name)
+{
+	$title = replaceChars($name);
+	if(!preg_match("/^[ A-Za-zĄŚŹĘÓĽŁŻŃĆąśźęóšłżćńÁÂÄÇÉËÔÖÓÜÚÝÜÝßâäáäăçëéÍÎíîôöőóúüůűý0-9().,-]{10,100}$/", $name)) 
 		return false; 
 	
 	return true;
@@ -132,6 +148,32 @@ function checkEmail($email) {
 		return false; 
 	
 	return true;
+}
+
+function checkAdditionalInfo($info)
+{
+	if(!preg_match('/^[ 0-9A-Za-zĘÓĽŁŻŃĆęóšłżćńÁÂÄÇÉËÔÖÓÜÚÝÜÝßâäáäăçëéÍÎíîôöőóúüůűý_,;:\.()\/-]{5,255}$/', $info)) 
+		return false; 
+	
+	return true;
+}
+
+function checkIfDateInFutureOrToday($date)
+{
+	if(!checkDateRegex($date)) 
+		return false;
+
+	list($year,$month,$day)=explode('-',$date);
+	$today = getdate();
+	$dm = $today['mon']; $dd = $today['mday']; $dr = $today['year'];
+	if($dr>$year) 
+		return false;
+	if($dr==$year && $dm>$month) 
+		return false;
+	if($dr==$year && $dm==$month && $dd>$day) 
+		return false;
+	
+	return checkdate($month,$day,$year);
 }
 
 function replaceChars($word) {

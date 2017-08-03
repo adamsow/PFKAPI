@@ -5,7 +5,7 @@ return [
         	'Error' => 'Wrong username or password.'
         	],
 		'UnauthorizedAccess' => [
-        	'Error' => 'Unauthorized.'
+        	'Error' => 'Unauthorized access.'
         	],
         ]
 ];
