@@ -43,7 +43,7 @@ class Route
     /**
      * @var string The route pattern (e.g. "/books/:id")
      */
-    protected $pattern;
+    public $pattern;
 
     /**
      * @var mixed The route callable

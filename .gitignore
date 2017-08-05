@@ -3,3 +3,4 @@ adamsow.pub
 /src/private/*
 ssh.sh
 /src/logs/*
+/.vscode
