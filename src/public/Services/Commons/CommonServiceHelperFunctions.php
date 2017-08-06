@@ -156,7 +156,7 @@ function GetClass($class)
 
 function PrepareExhibitionMessage($data)
 {
-	$message = iconv("Windows-1250", "UTF-8", file_get_contents('email-templates/wystawa.html'));
+	$message = iconv("Windows-1250", "UTF-8", file_get_contents(__DIR__ . '/../../email-templates/wystawa.html'));
 	
 	$bestStudYesNo = 'Nie';
 	if($data->isBestStud == 'true'){
