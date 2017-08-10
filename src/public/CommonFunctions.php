@@ -29,3 +29,18 @@ function HasAllAccess($access)
 	
 	return false;
 }
+
+function GetPage($accessPage, $sites)
+{
+	$pattern = $accessPage->pattern;
+	if (strpos($pattern, '/member' ) > -1) {
+		$department = $accessPage->params['department'];
+		$page = $sites['sites']['members/' . $department];
+	}
+	else
+	{
+		$page = $sites['sites'][$pattern];
+	}
+
+	return $page;
+}

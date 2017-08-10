@@ -1,5 +1,6 @@
 <?php
 require_once('regexFunctions.php');
+require_once('resize_image.php');
 
 function GetBreeds($db)
 {
@@ -245,6 +246,16 @@ function PrepareExhibitionMessage($data)
 	return $message;
 }
 
+function PrepareAccountCreationMessage($email, $password)
+{
+	$message = iconv("Windows-1250", "UTF-8", file_get_contents(__DIR__ . '/../../email-templates/account.html'));
+	
+	$message = str_replace("{Username}", $email, $message);
+	$message = str_replace("{Password}", $password, $message);
+	
+	return $message;
+}
+
 function SendEmail($to, $toName, $message, $subject, $from, $fromName, $password, $sendCopyToMe)
 {
 	$mail = new PHPMailer();
@@ -324,4 +335,62 @@ function GetApplicationConsts($db, $log)
 	$result = '{"breed":' . $breeds . ',"color":' . $colors . ',"country":' . $countries . '}';
 
 	return $result;
+}
+
+function GetDepartments($db, $log)
+{
+	$log -> addInfo("Getting departments.");
+	$stmt = $db->prepare("SELECT oddzial as department from region;");
+	$stmt->execute();
+	$departments = json_encode($stmt->fetchAll());
+	
+	return $departments;
+}
+
+function CheckFile()
+{
+	// Undefined | Multiple Files | $_FILES Corruption Attack
+	// If this request falls under any of them, treat it invalid.
+	if (!isset($_FILES['file']['error']) 
+		|| is_array($_FILES['file']['error'])) 
+	{
+		throw new RuntimeException('Invalid parameters.');
+	}
+
+	// Check $_FILES['upfile']['error'] value.
+	switch ($_FILES['file']['error']) 
+	{
+		case UPLOAD_ERR_OK:
+			break;
+		case UPLOAD_ERR_NO_FILE:
+			throw new RuntimeException('No file sent.');
+		case UPLOAD_ERR_INI_SIZE:
+		case UPLOAD_ERR_FORM_SIZE:
+			throw new RuntimeException('Exceeded filesize limit.');
+		default:
+			throw new RuntimeException('Unknown errors.');
+	}
+
+	// You should also check filesize here. 
+	if ($_FILES['file']['size'] > 1048576) 
+	{
+		throw new RuntimeException('Exceeded filesize limit.');
+	}
+
+	// DO NOT TRUST $_FILES['upfile']['mime'] VALUE !!
+	// Check MIME Type by yourself.
+	$finfo = new finfo(FILEINFO_MIME_TYPE);
+	if (false === $ext = array_search(
+		$finfo->file($_FILES['file']['tmp_name']),
+		array(
+			'jpg' => 'image/jpeg',
+			'png' => 'image/png',
+			'gif' => 'image/gif',
+		),
+		true
+	)) {
+		throw new RuntimeException('Invalid file format.');
+	}
+
+	return true;
 }

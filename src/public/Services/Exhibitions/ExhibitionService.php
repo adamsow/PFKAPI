@@ -104,13 +104,3 @@ function RemoveExhibition($id, $db, $log, $userId)
 
 	return true;
 }
-
-function GetDepartments($db, $log)
-{
-	$log -> addInfo("Getting departments.");
-	$stmt = $db->prepare("SELECT oddzial as department from region;");
-	$stmt->execute();
-	$departments = json_encode($stmt->fetchAll());
-	
-	return $departments;
-}

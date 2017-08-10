@@ -50,10 +50,10 @@ function AddParticipant($data, $db, $log, $userId)
 {	
 	$log -> addInfo("Adding new participant for exhibition: " . $data->exFullName);
 	if(!checkExhibitionFormData($data))
-		return "validation_error";
+		return false;
 	
 	if(applicationAlreadyExists($db, $data))
-		return "already_exists";
+		return false;
 	
 	AddNewParticipant($data, $db, $userId);
 		

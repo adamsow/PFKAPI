@@ -1,7 +1,6 @@
 <?php
     require_once('../APIConfiguration.php');
     require_once('../Services/Participants/ParticipantService.php');
-    $pages = include __DIR__ . '/../pages.php';
 
     //GET exhibition participants 
     $app->get('/participants/:id', $referer($app), $authorization($app), function ($id) use ($app) 

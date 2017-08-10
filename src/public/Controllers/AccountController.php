@@ -1,7 +1,6 @@
 <?php
     require_once('../APIConfiguration.php');
     require_once('../Services/Account/AccountService.php');
-    $pages = include __DIR__ . '/../pages.php';
 
     //GET token
 	$app->get('/token/:name/:password', $referer($app), function ($name, $password) use ($app) 

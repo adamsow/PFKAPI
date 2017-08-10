@@ -21,7 +21,7 @@
 	$app->add(new \Slim\Middleware\JwtAuthentication([
 		"path" => "/",
 		"logger" => $app->log,
-		"passthrough" => ["/token", "/breedings", "/studs", "/litters", "/exhibition", "/members"],	
+		"passthrough" => ["/token", "/breedings", "/studs", "/litters", "/exhibition"],	
 		"secret" => $settings['settings']['secret'],
 		'displayErrorDetails' => false,
 		"callback" => function ($options) use ($app) {
@@ -41,7 +41,6 @@
 			$db['user'], $db['pass']);
 			$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 			$pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-			//$pdo->setAttribute(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8");
 			return $pdo;
 		}
 		catch(Exception $e){
@@ -101,9 +100,9 @@
         {
 			$scope = $app->jwt->scope;
 			$db = $app->db;
-			$page = $app->pages['sites'][$accessPage->pattern];
+			$page = GetPage($accessPage, $app->pages);
     		$access = GetAccess($scope, $page, $db);
-			if($access === NULL && $access === "NO ACCESS")
+			if($access === NULL || $access === "NO ACCESS" || $access === '')
 			{
 				$app->response->status(401);
 				echo json_encode($app->err['errors']['UnauthorizedAccess']);
@@ -118,7 +117,7 @@
 		{
 			$scope = $app->jwt->scope;
 			$db = $app->db;
-			$page = $app->pages['sites'][$accessPage->pattern];
+			$page = GetPage($accessPage, $app->pages);
     		$access = GetAccess($scope, $page, $db);
 			if (!HasWriteAccess($access)) 
 			{
@@ -135,7 +134,7 @@
 		{
 			$scope = $app->jwt->scope;
 			$db = $app->db;
-			$page = $app->pages['sites'][$accessPage->pattern];
+			$page = GetPage($accessPage, $app->pages);
     		$access = GetAccess($scope, $page, $db);
 			if (!HasAllAccess($access)) 
 			{
