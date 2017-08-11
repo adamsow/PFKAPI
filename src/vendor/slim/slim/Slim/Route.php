@@ -68,7 +68,7 @@ class Route
     /**
      * @var array Key-value array of URL parameters
      */
-    protected $params = array();
+    public $params = array();
 
     /**
      * @var array value array of URL parameter names

@@ -1017,7 +1017,7 @@ class Slim
      */
     public function stop()
     {
-//        throw new \Slim\Exception\Stop();
+    //    throw new \Slim\Exception\Stop();
     }
 
     /**

@@ -34,6 +34,16 @@ function checkIfDateInPastOrToday($date) {
 	return checkdate($month,$day,$year);
 }
 
+function checkIfValidDate($date)
+{
+	if(!checkDateRegex($date)) 
+		return false;
+
+	list($year,$month,$day)=explode('-',$date);
+
+	return checkdate($month,$day,$year);
+}
+
 function checkTitle($title) {
 	$title = replaceChars($title);
 	if(!preg_match("/^[ A-Za-zĘÓĽŁŻŃĆęóšłżćńÁÂÄÇÉËÔÖÓÜÚÝÜÝßâäáäăçëéÍÎíîôöőóúüůűý.,-]{4,50}$/", $title)) 
@@ -152,7 +162,7 @@ function checkEmail($email) {
 
 function checkAdditionalInfo($info)
 {
-	if(!preg_match('/^[ 0-9A-Za-zĘÓĽŁŻŃĆęóšłżćńÁÂÄÇÉËÔÖÓÜÚÝÜÝßâäáäăçëéÍÎíîôöőóúüůűý_,;:\.()\/-]{5,255}$/', $info)) 
+	if(!preg_match('/^[ A-Za-zĄŚŹĘÓĽŁŻŃĆąśźęóšłżćńÁÂÄÇÉËÔÖÓÜÚÝÜÝßâäáäăçëéÍÎíîôöőóúüůűý_,;:\.()\/-]{5,255}$/', $info)) 
 		return false; 
 	
 	return true;

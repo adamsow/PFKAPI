@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../Commons/CommonServiceHelperFunctions.php';
-//require_once __DIR__ . '/../../../../../wp-load.php';
+require_once __DIR__ . '/../../../../../wp-load.php';
 
 function GetDepartmentMembers($db, $log, $department, $filter){
 	$log -> addInfo("Getting members for department: " . $department);
@@ -52,26 +52,16 @@ function UserExists($email)
 	return false;
 }
 
-function MemberExists($db, $data)
+function PersonExists($db, $data)
 {
-	$stmt = $db->prepare("Select count(*) from osoba where imie = :name and nazwisko = :surname and miejscowosc = :city");
-	
-	$stmt->bindParam(':name', $data->name);
-	$stmt->bindParam(':surname', $data->surname);
-	$stmt->bindParam(':city', $data->city);
-
-	$stmt->execute();
-
-	$number_of_rows = $stmt->fetchColumn(); 
-
-	if($number_of_rows > 0)
-		return true;
-	
-	return false;
+    return CheckIfPersonExists($db, $data);
 }
 
 function AddMember($data, $db, $log, $userId, $dbw)
 {
+	if(!checkMemberData($data))
+		return 0;
+
 	CreateUser($data, $dbw);
 
 	$log -> addInfo("Adding member for department: " . $data->department);	
@@ -174,6 +164,9 @@ function CreateUser($data, $dbw)
 
 function UpdateMember($data, $db, $log, $userId, $memberId, $changeEmail, $oldEmail)
 {
+	if (!checkMemberData($data)) {
+		return 0;
+	}
 	if ($changeEmail) {
 		UdpateEmail($data->email, $oldEmail);
 	}
@@ -417,7 +410,7 @@ function RemoveMember($id, $db, $log, $userId, $email)
 	$stmt->bindParam(':photoId', $photoId);
 	$stmt->execute();
 
-	$stmt = $db->prepare("DELETE FROM hodowla WHERE nr_hod = (select nr_hod from czlonek_hodowla where nr_leg = :id);");
+	$stmt = $db->prepare("DELETE FROM hodowla WHERE nr_hod in (select nr_hod from czlonek_hodowla where nr_leg = :id);");
 	$stmt->bindParam(':id', $id);
 	$stmt->execute();
 
@@ -426,7 +419,7 @@ function RemoveMember($id, $db, $log, $userId, $email)
 	$stmt->execute();
 
 	$stmt = $db->prepare("DELETE FROM pies 
-						WHERE id_pies = (select id_pies from hodowca_pies 
+						WHERE id_pies in (select id_pies from hodowca_pies 
 							where id_osoba = (select id_osoba from osoba where czlonek = :id));");
 	$stmt->bindParam(':id', $id);
 	$stmt->execute();
@@ -436,7 +429,7 @@ function RemoveMember($id, $db, $log, $userId, $email)
 	$stmt->execute();
 
 	$stmt = $db->prepare("DELETE FROM pies 
-						WHERE id_pies = (select id_pies from wlasciciel_pies 
+						WHERE id_pies in (select id_pies from wlasciciel_pies 
 							where id_osoba = (select id_osoba from osoba where czlonek = :id));");
 	$stmt->bindParam(':id', $id);
 	$stmt->execute();

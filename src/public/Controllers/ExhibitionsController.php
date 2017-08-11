@@ -59,7 +59,7 @@
 	});
 	
 	//GET departments 
-	$app->get('/departments', $referer($app), $writeAccess($app), function () use ($app) 
+	$app->get('/departments', $referer($app), $authorization($app), function () use ($app) 
 	{
 		$log = $app->log;
         $db = $app->db;

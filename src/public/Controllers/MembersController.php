@@ -3,7 +3,7 @@
 	require_once('../Services/Members/MemberService.php');
 
 	//GET department members 
-	$app->get('/members/:department/:filter',  $authorization($app), function ($department, $filter) use ($app) 
+	$app->get('/members/:department/:filter', $referer($app),  $authorization($app), function ($department, $filter) use ($app) 
 	{
 		$log = $app->log;
 		$db = $app->db;
@@ -38,7 +38,7 @@
 			echo "user_exists";
 			return;
 		}
-		if (MemberExists($db, $data)) {
+		if (PersonExists($db, $data)) {
 			$app->response->status(409);
 			echo "member_exists";
 			return;
@@ -73,7 +73,7 @@
 		if ($oldData->surname !== $data->surname
 			|| $oldData->name !== $data->name
 			|| $oldData->city !== $data->city) {
-			if (MemberExists($db, $data)) {
+			if (PersonExists($db, $data)) {
 				$app->response->status(409);
 				echo "member_exists";
 				return;
