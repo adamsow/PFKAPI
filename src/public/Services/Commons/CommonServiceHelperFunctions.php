@@ -11,7 +11,7 @@ function GetBreeds($db)
 
 function GetColors($db)
 {
-	$stmt = $db->prepare("SELECT id_masc as id, masc as name FROM masc ORDER BY masc;");
+	$stmt = $db->prepare("SELECT id_masc as id, masc as name, colour as color FROM masc ORDER BY masc;");
 	$stmt->execute();
 	return $stmt->fetchAll();
 }	

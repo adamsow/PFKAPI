@@ -5,14 +5,12 @@ require_once('ValidatePersonService.php');
 function GetPersons($db, $log)
 {
 	$log -> addInfo("Getting persons.");
-
 	
 	$stmt = $db->prepare("SELECT o.id_osoba as Id, o.imie as name, o.nazwisko as surname, p.kraj as country, o.miejscowosc as city 
                         FROM osoba o 
                         JOIN panstwo p ON o.panstwo = p.id_panstwo 
                         WHERE o.czlonek IS NULL");
 
-	$stmt->bindParam(':department', $department);
 	$stmt->execute();
 	$persons = json_encode($stmt->fetchAll());
 	
@@ -21,7 +19,7 @@ function GetPersons($db, $log)
 
 function GetPersonById($db, $log, $id, $dbw)
 {
-    $log -> addInfo("Getting info about member: " . $id);	
+    $log -> addInfo("Getting info about person: " . $id);	
 	$stmt = $db->prepare("SELECT imie as name, nazwisko as surname, ulica as street, kod as postal, miejscowosc as city, 
                         region as voivodeship, panstwo as country, tel_stac as phone, tel_kom as mobile, email, creator as created_by,
                         created, changed as modified, changed_by
