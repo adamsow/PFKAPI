@@ -1,12 +1,13 @@
 <?php
 require_once __DIR__ . '/../Commons/CommonServiceHelperFunctions.php';
+require_once('ValidatePersonService.php');
 
 function GetPersons($db, $log)
 {
 	$log -> addInfo("Getting persons.");
 
 	
-	$stmt = $db->prepare("SELECT o.id_osoba as id, o.imie as name, o.nazwisko as surname, p.kraj as country 
+	$stmt = $db->prepare("SELECT o.id_osoba as Id, o.imie as name, o.nazwisko as surname, p.kraj as country, o.miejscowosc as city 
                         FROM osoba o 
                         JOIN panstwo p ON o.panstwo = p.id_panstwo 
                         WHERE o.czlonek IS NULL");

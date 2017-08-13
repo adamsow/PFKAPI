@@ -1,7 +1,7 @@
 <?php
 $centrEx = '/Centrala/Wystawy';
 $members = '/Centrala/Czlonkowie/';
-$persons = '/Centrala/Osoby';
+$persons = '/Centrala/Czlonkowie/baza-osob';
 return 
 [
     'sites' => 
@@ -35,6 +35,7 @@ return
         'members/świętokrzyski' => $members . 'swietokrzyski',
         'persons' => $persons,
         '/persons' => $persons,
-        '/persons/:id' => $persons
+        '/persons/:id' => $persons,
+        '/personsConsts' => $persons
     ]
 ];

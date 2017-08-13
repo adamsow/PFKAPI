@@ -1,5 +1,4 @@
 <?php
-require_once __DIR__ . '/../Commons/CommonServiceHelperFunctions.php';
 
 function GetExhibitionParticipants($db, $log, $id)
 {
