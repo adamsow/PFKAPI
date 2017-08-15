@@ -26,7 +26,7 @@ function GetColorById($db, $log, $id, $dbw)
 	$createdBy = GetUser($color['created_by'], $dbw);
 	$modifiedBy = GetUser($color['changed_by'], $dbw);
 	$color['created_by'] = $createdBy;
-	$person['changed_by'] = $modifiedBy;
+	$color['changed_by'] = $modifiedBy;
 	
 	$color = json_encode($color);
 	
@@ -97,7 +97,7 @@ function UpdateColor($data, $db, $log, $userId, $id)
 	$stmt = $db->prepare("UPDATE masc set masc = :color_pl, colour = :color, changed_by = :userId, changed = NOW()
 						WHERE id_masc = :id;");
 
-	$stmt->bindParam(':color_pl', $data->color_plname);
+	$stmt->bindParam(':color_pl', $data->color_pl);
 	$stmt->bindParam(':color', $data->color);
 	$stmt->bindParam(':userId', $userId);
 	$stmt->bindParam(':id', $id);

@@ -4,14 +4,20 @@ require_once('resize_image.php');
 
 function GetBreeds($db)
 {
-	$stmt = $db->prepare("SELECT id_rasa as id, rasa as name FROM rasa ORDER BY rasa;");
+	$stmt = $db->prepare("SELECT id_rasa as id, rasa as name, breed, grupa as gr
+						FROM rasa 
+						ORDER BY rasa
+						COLLATE utf8_polish_ci;");
 	$stmt->execute();
 	return $stmt->fetchAll();
 }
 
 function GetColors($db)
 {
-	$stmt = $db->prepare("SELECT id_masc as id, masc as name, colour as color FROM masc ORDER BY masc;");
+	$stmt = $db->prepare("SELECT id_masc as id, masc as name, colour as color 
+						FROM masc 
+						ORDER BY masc
+						COLLATE utf8_polish_ci;");
 	$stmt->execute();
 	return $stmt->fetchAll();
 }	

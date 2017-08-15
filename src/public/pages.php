@@ -3,6 +3,7 @@ $centrEx = '/Centrala/Wystawy';
 $members = '/Centrala/Czlonkowie/';
 $persons = '/Centrala/Czlonkowie/baza-osob';
 $colors = '/Centrala/edycja-masci';
+$breeds = '/Centrala/edycja-ras';
 return 
 [
     'sites' => 
@@ -41,5 +42,8 @@ return
         'colors' => $colors,
         '/colors' => $colors,
         '/colors/:id' => $colors,
+        'breeds' => $breeds,
+        '/breeds' => $breeds,
+        '/breeds/:id' => $breeds
     ]
 ];
