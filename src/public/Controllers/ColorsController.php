@@ -38,7 +38,7 @@
 			return;
 		}
 		
-       	$result = AddColor($data, $db, $log, $userId, $dbw);
+       	$result = AddColor($data, $db, $log, $userId);
        	echo $result;
 	});
 

@@ -2,8 +2,10 @@
 $centrEx = '/Centrala/Wystawy';
 $members = '/Centrala/Czlonkowie/';
 $persons = '/Centrala/Czlonkowie/baza-osob';
-$colors = '/Centrala/edycja-masci';
-$breeds = '/Centrala/edycja-ras';
+$colors = '/Centrala/Edycja-masci';
+$breeds = '/Centrala/Edycja-ras';
+$breedings = '/Centrala/Hodowle';
+$litters = '/Centrala/Mioty';
 return 
 [
     'sites' => 
@@ -44,6 +46,20 @@ return
         '/colors/:id' => $colors,
         'breeds' => $breeds,
         '/breeds' => $breeds,
-        '/breeds/:id' => $breeds
+        '/breeds/:id' => $breeds,
+        'breedings'=> $breedings,
+        '/allBreedings/:filter'=> $breedings,
+        '/getBreedingById/:id' => $breedings,
+        '/newBreeding' => $breedings,
+        '/updateBreeding/:id' => $breedings,
+        '/deleteBreeding/:id' => $breedings,
+        '/usersautocomplete/:filter' => $breedings,
+        '/breedsautocompletebreedings/:filter' => $breedings,
+        'litters' => $litters,
+        '/litters' => $litters,
+        '/litters/:id' => $litters,
+        '/breedsautocompletelitters/:filter' => $litters,
+        '/breedingsautocompletelitters/:filter' => $litters,
+        '/dogsautocompletelitters/:filter/:sex' => $litters
     ]
 ];

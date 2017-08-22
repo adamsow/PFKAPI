@@ -51,8 +51,8 @@
         $body = $app->request->getBody();
         $userId = $app->jwt->user_id;
         $data = json_decode($body);
-        $colorId = GetExistingBreedId($db, $data);
-        if ($colorId > 0 && $colorId !== $id) {
+        $breedId = GetExistingBreedId($db, $data);
+        if ($breedId > 0 && $breedId !== $id) {
             $app->response->status(409);
             echo "breed_exists";
             return;

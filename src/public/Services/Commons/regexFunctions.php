@@ -168,6 +168,21 @@ function checkAdditionalInfo($info)
 	return true;
 }
 
+function checkAddress($address){
+	$address = replaceChars($address);
+	if(!preg_match('/^[ A-Za-zĘÓĽŁŻŃĆęóšłżćńÁÂÄÇÉËÔÖÓÜÚÝÜÝßâäáäăçëéÍÎíîôöőóúüůűý0-9.,\/-]{10,150}$/', $address)) 
+		return false; 
+	
+	return true;
+}
+
+function checkWebsite($website){
+	if(!preg_match('/^[a-z0-9_.\/-]{5,50}$/', $website)) 
+		return false; 
+	
+	return true;
+}
+
 function checkIfDateInFutureOrToday($date)
 {
 	if(!checkDateRegex($date)) 

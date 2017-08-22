@@ -4,21 +4,22 @@ include_once("CommonServiceHelperFunctions.php");
 function GetBreedings($db, $log)
 {
 	$log -> addInfo("Getting breedings.");
-	$stmt = $db->prepare("SELECT grupa, o.imie, o.nazwisko, o.miejscowosc, o.region, o.email, o.tel_kom, o.tel_stac, h.przydomek, h.pisany, h.data_rej, r.rasa, r.breed 
-		FROM osoba o 
-		LEFT JOIN czlonek_hodowla ch ON o.czlonek = ch.nr_leg 
-		LEFT JOIN czlonek cz ON o.czlonek = cz.nr_leg 
-		LEFT JOIN logowanie l ON o.czlonek = l.nr_leg 
-		LEFT JOIN hodowla h ON ch.nr_hod = h.nr_hod 
-		LEFT JOIN rasa_hodowla rh ON h.nr_hod = rh.nr_hod 
-		LEFT JOIN rasa r ON rh.id_rasa = r.id_rasa 
-		WHERE czlonek IS NOT NULL 
-		AND ch.nr_leg IS NOT NULL 
-		AND l.status != 'blokada' 
-		AND (cz.data_stop IS NULL OR cz.data_stop = '') 
-		AND rasa IS NOT NULL 
-		AND (h.data_wrej IS NULL OR h.data_wrej = '') 
-		ORDER BY grupa, r.rasa, h.przydomek, o.nazwisko, o.imie;");
+	$stmt = $db->prepare("SELECT grupa, o.imie, o.nazwisko, o.miejscowosc, o.region, o.email, o.tel_kom, o.tel_stac, h.przydomek, 
+						h.pisany, h.data_rej, r.rasa, r.breed, h.www as website, h.www_widoczne as showWWW
+						FROM osoba o 
+						LEFT JOIN czlonek_hodowla ch ON o.czlonek = ch.nr_leg 
+						LEFT JOIN czlonek cz ON o.czlonek = cz.nr_leg 
+						LEFT JOIN logowanie l ON o.czlonek = l.nr_leg 
+						LEFT JOIN hodowla h ON ch.nr_hod = h.nr_hod 
+						LEFT JOIN rasa_hodowla rh ON h.nr_hod = rh.nr_hod 
+						LEFT JOIN rasa r ON rh.id_rasa = r.id_rasa 
+						WHERE czlonek IS NOT NULL 
+						AND ch.nr_leg IS NOT NULL 
+						AND l.status != 'blokada' 
+						AND (cz.data_stop IS NULL OR cz.data_stop = '') 
+						AND rasa IS NOT NULL 
+						AND (h.data_wrej IS NULL OR h.data_wrej = '') 
+						ORDER BY grupa, r.rasa, h.przydomek, o.nazwisko, o.imie;");
 	$stmt->execute();
 	$breedings = $stmt->fetchAll();
 	
@@ -172,4 +173,21 @@ function AddNewParticipant($data, $db)
 	$stmt->bindParam(':kennel6', $data->kennel6);
 	
 	$stmt->execute();
+}
+
+function GetMembersForAutoComplete($db, $filter)
+{
+	$filter = '%' . $filter . '%';
+	$stmt = $db->prepare("SELECT cz.nr_leg as ownerId, CONCAT(o.imie, ' ', o.nazwisko) as ownerName, cz.przynaleznosc as department
+						FROM czlonek cz
+						JOIN osoba o on o.czlonek = cz.nr_leg
+						WHERE cz.nr_leg LIKE :filter OR o.imie LIKE :filter OR o.nazwisko LIKE :filter 
+						OR CONCAT(o.imie, ' ', o.nazwisko) LIKE :filter;");
+	
+	$stmt->bindParam(':filter', $filter);
+	
+	$stmt->execute();
+	$members = $stmt->fetchAll();
+
+	return json_encode($members);
 }

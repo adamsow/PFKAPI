@@ -21,7 +21,8 @@ function GetDepartmentMembers($db, $log, $department, $filter){
 			break;
 	}
 	
-	$stmt = $db->prepare("SELECT cz.nr_leg as Id, o.imie as name, o.nazwisko as surname, o.miejscowosc as city, cz.skladka as paid
+	$stmt = $db->prepare("SELECT cz.nr_leg as Id, o.imie as name, o.nazwisko as surname, o.miejscowosc as city, cz.skladka as paid,
+						  o.poprawnosc as accepted
 						  FROM czlonek cz
 						  JOIN osoba o on o.czlonek = cz.nr_leg
 						  JOIN logowanie l on l.nr_leg = cz.nr_leg
@@ -62,8 +63,14 @@ function AddMember($data, $db, $log, $userId, $dbw)
 {
 	if(!checkMemberData($data))
 		return 0;
-
-	CreateUser($data, $dbw);
+	if(!UserExists($data->email))
+	{
+		CreateUser($data, $dbw);
+	}
+	else
+	{
+		UpdateRole($data);
+	}
 
 	$log -> addInfo("Adding member for department: " . $data->department);	
 
@@ -131,8 +138,9 @@ function AddMember($data, $db, $log, $userId, $dbw)
 function CreateUser($data, $dbw)
 {
 	// Generate the password and create the user
-  	$password = wp_generate_password( 12, false );
-  	$userId = wp_create_user($data->email, $password, $data->email);
+	$password = wp_generate_password( 12, false );
+	$userId = wp_create_user($data->email, $password, $data->email);
+	
 	// Set the nickname
 	wp_update_user(
 		array(
@@ -161,6 +169,14 @@ function CreateUser($data, $dbw)
 	$stmt->bindParam(':userId', $userId);
 
 	$stmt->execute();
+}
+
+function UpdateRole($data)
+{
+	$user = get_user_by("email", $data->email);
+	$userId = $user->ID;
+	$user = new WP_User( $userId );
+	$user->set_role( 'czonek' );
 }
 
 function UpdateMember($data, $db, $log, $userId, $memberId, $changeEmail, $oldEmail)

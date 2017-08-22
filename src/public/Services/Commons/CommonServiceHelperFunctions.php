@@ -420,3 +420,53 @@ function CheckIfPersonExists($db, $data)
 	
 	return false;
 }
+
+function GetBreedsAutoComplete($db, $filter)
+{
+	$filter = '%' . $filter . '%';
+	$stmt = $db->prepare("SELECT id_rasa as breedId, rasa as breed_pl, breed
+						FROM rasa
+						WHERE rasa LIKE :filter OR breed LIKE :filter;");
+	
+	$stmt->bindParam(':filter', $filter);
+	
+	$stmt->execute();
+	$breeds = $stmt->fetchAll();
+	return json_encode($breeds);
+}
+
+function GetBreedingsAutoComplete($db, $filter)
+{
+	$filter = '%' . $filter . '%';
+	$stmt = $db->prepare("SELECT h.nr_hod as breedingId, h.przydomek as breeding, cz.przynaleznosc as ownerDepartment,
+						GROUP_CONCAT(CONCAT(o.imie, ' ', o.nazwisko) SEPARATOR ', ') as ownerName,
+						GROUP_CONCAT(cz.przynaleznosc SEPARATOR ', ') as ownerDepartment,
+						GROUP_CONCAT(cz.nr_leg SEPARATOR ', ') as ownerId
+						FROM hodowla h
+						JOIN czlonek_hodowla czh on czh.nr_hod = h.nr_hod
+						JOIN czlonek cz on cz.nr_leg = czh.nr_leg
+						JOIN osoba o on o.czlonek = cz.nr_leg
+						WHERE przydomek LIKE :filter
+						GROUP BY h.nr_hod;");
+	
+	$stmt->bindParam(':filter', $filter);
+	
+	$stmt->execute();
+	$breedings = $stmt->fetchAll();
+	return json_encode($breedings);
+}
+
+function GetDogsAutoComplete($db, $filter, $sex)
+{
+	$filter = '%' . $filter . '%';
+	$stmt = $db->prepare("SELECT id_pies as dogId, fullname as nickname
+						FROM pies
+						WHERE fullname LIKE :filter and plec = :sex;");
+	
+	$stmt->bindParam(':filter', $filter);
+	$stmt->bindParam(':sex', $sex);
+	
+	$stmt->execute();
+	$dogs = $stmt->fetchAll();
+	return json_encode($dogs);
+}

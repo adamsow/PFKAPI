@@ -32,12 +32,6 @@
         $body = $app->request->getBody();
         $userId = $app->jwt->user_id;
         $data = json_decode($body);
-		if(UserExists($data->email))
-		{
-			$app->response->status(409);
-			echo "user_exists";
-			return;
-		}
 		if (PersonExists($db, $data)) {
 			$app->response->status(409);
 			echo "member_exists";

@@ -2,9 +2,8 @@
 function GetAccess($scope, $pageName, $db)
 {
 	$in = join("','",$scope); 
-	$stmt = $db->prepare("SELECT MAX(al.ID) as ID, al.Name 
-						FROM AccessRights ar 
-						JOIN AccessLevel al on al.ID = ar.AccessLevelID 
+	$stmt = $db->prepare("SELECT MAX(AccessLevelId) as ID, (Select Name from AccessLevel where ID = MAX(AccessLevelId)) as Name
+						FROM AccessRights  
 						WHERE APISiteID = (SELECT ID FROM APISites WHERE PageName = :pageName) 
 						AND RoleName IN ('" . $in . "');");
 	$stmt->bindParam(':pageName', $pageName);
@@ -16,7 +15,7 @@ function GetAccess($scope, $pageName, $db)
 
 function HasWriteAccess($access)
 {
-	if($access === "ZAPIS" || $access === "ALL")
+	if($access === "WRITE" || $access === "ALL")
 		return true;
 	
 	return false;

@@ -21,7 +21,7 @@
 	$app->add(new \Slim\Middleware\JwtAuthentication([
 		"path" => "/",
 		"logger" => $app->log,
-		"passthrough" => ["/token", "/breedings", "/studs", "/litters", "/exhibition"],	
+		"passthrough" => ["/token", "/breedings", "/studs", "/publiclitters", "/exhibition"],	
 		"secret" => $settings['settings']['secret'],
 		'displayErrorDetails' => false,
 		"callback" => function ($options) use ($app) {
@@ -75,6 +75,7 @@
     $app->error(function ( Exception $e ) use ($app) 
     {
             $app->log->addError($e->getMessage());
+            $app->log->addError($e->getTraceAsString());
 			$app->response->status(500);
 			echo "Error occured";
     });

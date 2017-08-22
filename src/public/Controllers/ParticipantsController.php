@@ -76,7 +76,7 @@
         $log = $app->log;
         $db = $app->db;
         $dbw = $app->dbw;
-        $consts = GetApplicationConsts($db, $log);
+        $consts = GetApplicationData($db, $log);
         echo $consts;
     });
 

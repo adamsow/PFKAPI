@@ -66,7 +66,7 @@ function GetExistingColorId($db, $data)
 	return $colorId['Id'];
 }
 
-function AddColor($data, $db, $log, $userId, $dbw)
+function AddColor($data, $db, $log, $userId)
 {
 	if(!checkColorData($data))
 		return 0;

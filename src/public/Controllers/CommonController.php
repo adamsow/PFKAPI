@@ -21,7 +21,7 @@ $app->get('/studs', $referer($app), function () use ($app)
 });
 
 //GET litters
-$app->get('/litters', $referer($app), function () use ($app) 
+$app->get('/publiclitters', $referer($app), function () use ($app) 
 {
 	$log = $app->log;
 	$db = $app->db;			
@@ -50,6 +50,14 @@ $app->post('/exhibition', $referer($app), function () use ($app)
 	$log -> addInfo($result);
 
 	echo $result;
+});
+
+//GET members autocomplete
+$app->get('/usersautocomplete/:filter', $referer($app), $writeAccess($app), function ($filter) use ($app) 
+{
+	$db = $app->db;			
+	$members = GetMembersForAutoComplete($db, $filter);
+	echo $members;
 });
 
 $app->run();

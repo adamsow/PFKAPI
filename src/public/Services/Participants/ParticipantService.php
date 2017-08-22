@@ -1,10 +1,12 @@
 <?php
+require_once __DIR__ . '/../Commons/CommonServiceHelperFunctions.php';
 
 function GetExhibitionParticipants($db, $log, $id)
 {
 	$log -> addInfo("Getting participants for exhibition id: " .  $id);
 	
-	$stmt = $db->prepare("SELECT u.id, u.fullname as name, u.nr_rod as lineage, r.rasa as breed, u.klasa as class, CONCAT(u.imie, ' ', u.nazwisko) as ownerName
+	$stmt = $db->prepare("SELECT u.id, u.fullname as name, u.nr_rod as lineage, r.rasa as breed, u.klasa as class, CONCAT(u.imie, ' ', u.nazwisko) as ownerName,
+						u.zatwierdzono as accepted
 						FROM Uczestnicy u 
 						JOIN rasa r on r.id_rasa = u.rasa
 						WHERE u.wystawa_id = :id;");
@@ -272,4 +274,8 @@ function GetExhibitionParticipantsAll($db, $log, $id, $filter, $dbw)
 	$participants = json_encode($participants);
 	
 	return $participants;
+}
+
+function GetApplicationData($db, $log){
+	return GetApplicationConsts($db, $log);
 }
