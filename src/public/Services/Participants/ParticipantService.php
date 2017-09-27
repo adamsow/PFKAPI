@@ -8,7 +8,7 @@ function GetExhibitionParticipants($db, $log, $id)
 	$stmt = $db->prepare("SELECT u.id, u.fullname as name, u.nr_rod as lineage, r.rasa as breed, u.klasa as class, CONCAT(u.imie, ' ', u.nazwisko) as ownerName,
 						u.zatwierdzono as accepted
 						FROM Uczestnicy u 
-						JOIN rasa r on r.id_rasa = u.rasa
+						LEFT JOIN rasa r on r.id_rasa = u.rasa
 						WHERE u.wystawa_id = :id;");
 	$stmt->bindParam(':id', $id);
 	$stmt->execute();
@@ -29,8 +29,8 @@ function GetExhibitionParticipant($db, $log, $id, $dbw)
 						u.hodowlana3 as kennel3, u.hodowlana4 as kennel4, u.hodowlana5 as kennel5, u.hodowlana6 as kennel6, u.adnotacje as additionalInfo, u.zatwierdzono as accepted,
 						u.changed as modified, u.changed_by, u.created_by, u.ocena as mark, u.lokata as place, u.certyfikat as certificate, tytuly as exTitles
 						FROM Uczestnicy u 
-						JOIN rasa r on r.id_rasa = u.rasa
-						JOIN masc m on m.id_masc = u.masc
+						LEFT JOIN rasa r on r.id_rasa = u.rasa
+						LEFT JOIN masc m on m.id_masc = u.masc
 						WHERE id = :id;");
 	
 	$stmt->bindParam(':id', $id);
@@ -253,8 +253,8 @@ function GetExhibitionParticipantsAll($db, $log, $id, $filter, $dbw)
 						u.suka3, u.suka4, u.suka5, u.suka6, u.para1, u.para2, u.hodowlana1, u.hodowlana2, u.hodowlana3, u.hodowlana4, u.hodowlana5, u.hodowlana6, u.adnotacje, u.zatwierdzono,
 						u.changed as zmieniono, u.changed_by as przez
 						FROM Uczestnicy u 
-						JOIN rasa r on r.id_rasa = u.rasa
-						JOIN masc m on m.id_masc = u.masc
+						LEFT JOIN rasa r on r.id_rasa = u.rasa
+						LEFT JOIN masc m on m.id_masc = u.masc
 						WHERE u.wystawa_id = :id " . $condition . "
 						 ORDER BY " . $order . ";");
 	$stmt->bindParam(':id', $id);

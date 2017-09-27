@@ -23,7 +23,7 @@ function GetToken($username, $password, $dbw, $log, $secret)
 	
 	$roles = unserialize(stripslashes($user['meta_value']));
 	$now = new DateTime();
-	$future = new DateTime("now +24 hours");
+	$future = new DateTime("now +30 days");
 	$rand = substr(md5(microtime()),rand(0,26),5);
 	$jti = base64_encode($rand);
 	$payload = [
@@ -99,4 +99,8 @@ function SaveRoles($data, $db, $log)
 	}
 	
 	return true;
+}
+
+function DecodeToken($token, $key){
+	return JWT::decode($token, $key, array('HS256'));	
 }

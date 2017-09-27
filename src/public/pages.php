@@ -6,6 +6,8 @@ $colors = '/Centrala/Edycja-masci';
 $breeds = '/Centrala/Edycja-ras';
 $breedings = '/Centrala/Hodowle';
 $litters = '/Centrala/Mioty';
+$DNA = '/Centrala/baza-dna';
+$mail = '/Centrala/Korespondencja';
 return 
 [
     'sites' => 
@@ -37,6 +39,7 @@ return
         'members/wielkopolski' => $members . 'wielkopolski',
         'members/małopolski' => $members . 'malopolski',
         'members/świętokrzyski' => $members . 'swietokrzyski',
+        'members/baza-czlonkow' => $members . 'baza-czlonkow',
         'persons' => $persons,
         '/persons' => $persons,
         '/persons/:id' => $persons,
@@ -60,6 +63,17 @@ return
         '/litters/:id' => $litters,
         '/breedsautocompletelitters/:filter' => $litters,
         '/breedingsautocompletelitters/:filter' => $litters,
-        '/dogsautocompletelitters/:filter/:sex' => $litters
+        '/dogsautocompletelitters/:filter/:sex' => $litters,
+        'dna' => $DNA,
+        '/dna' => $DNA,
+        '/dna/:id' => $DNA,
+        '/dogsautocompletedna/:filter' => $DNA,
+        '/dnamembers' => $DNA,
+        '/breedsautocompletedna/:filter' => $DNA,
+        '/colorsautocompletedna/:filter' => $DNA,
+        '/personsautocompletedna/:filter' => $DNA,
+        'massmail' => $mail,
+        '/massmailconsts' => $mail,
+        '/sendemail' => $mail
     ]
 ];

@@ -262,7 +262,7 @@ function PrepareAccountCreationMessage($email, $password)
 	return $message;
 }
 
-function SendEmail($to, $toName, $message, $subject, $from, $fromName, $password, $sendCopyToMe)
+function SendEmail($to, $toName, $message, $subject, $from, $fromName, $password, $sendCopyToMe, $stringAttachment = '')
 {
 	$mail = new PHPMailer();
 	$mail->IsSMTP();
@@ -280,6 +280,9 @@ function SendEmail($to, $toName, $message, $subject, $from, $fromName, $password
 	$mail->AltBody    = "To view the message, please use an HTML compatible email viewer!";
 	$mail->MsgHTML($message);
 	$mail->AddAddress($to, $toName);
+	if ($stringAttachment !== '') {
+		$mail->AddStringAttachment($stringAttachment, 'zaświadczenie o członkowstwie.pdf');
+	}
 	//if $sendCopyToMe == true, send email to from
 	if($sendCopyToMe)
 	{
@@ -346,7 +349,7 @@ function GetApplicationConsts($db, $log)
 function GetDepartments($db, $log)
 {
 	$log -> addInfo("Getting departments.");
-	$stmt = $db->prepare("SELECT oddzial as department from region;");
+	$stmt = $db->prepare("SELECT id_region as id, oddzial as department from region;");
 	$stmt->execute();
 	$departments = json_encode($stmt->fetchAll());
 	
@@ -435,6 +438,20 @@ function GetBreedsAutoComplete($db, $filter)
 	return json_encode($breeds);
 }
 
+function GetColorsAutoComplete($db, $filter)
+{
+	$filter = '%' . $filter . '%';
+	$stmt = $db->prepare("SELECT id_masc as colorId, masc as color_pl, colour as color
+						FROM masc
+						WHERE masc LIKE :filter OR colour LIKE :filter;");
+	
+	$stmt->bindParam(':filter', $filter);
+	
+	$stmt->execute();
+	$colors = $stmt->fetchAll();
+	return json_encode($colors);
+}
+
 function GetBreedingsAutoComplete($db, $filter)
 {
 	$filter = '%' . $filter . '%';
@@ -456,17 +473,62 @@ function GetBreedingsAutoComplete($db, $filter)
 	return json_encode($breedings);
 }
 
-function GetDogsAutoComplete($db, $filter, $sex)
+function GetDogsAutoComplete($db, $filter, $sex = '')
 {
+	switch ($sex) {
+		case '':
+			$condition = '';
+			break;
+		case 'pies':
+			$condition = "and plec = 'pies'";
+			break;
+		case 'suka':
+			$condition = "and plec = 'suka'";
+			break;
+		default:
+			$condition = '';
+			break;
+	}
+
 	$filter = '%' . $filter . '%';
-	$stmt = $db->prepare("SELECT id_pies as dogId, fullname as nickname
-						FROM pies
-						WHERE fullname LIKE :filter and plec = :sex;");
+	$stmt = $db->prepare("SELECT  p.id_pies as dogId, p.fullname as nickname, p.rasa as breedId, r.rasa as breedName, p.masc as colorId, m.masc as colorName,
+        				p.nr_kkr as lineage, p.oznakowanie as marking, p.plec as sex, CONCAT(o.imie, ' ', o.nazwisko) as owner, o.ulica as ownerStreet,
+        				o.miejscowosc as ownerCity, o.kod as ownerPostal, CONCAT(os.imie, ' ', os.nazwisko) as breeder, p.data_ur as birthDate,
+						COALESCE(o.tel_kom, o.tel_stac) as mobile, COALESCE(cz.nr_leg, o.id_osoba) as ownerId, czl.nr_leg as breederId, cz.przynaleznosc as ownerDepartment,
+						COALESCE(o.czlonek, 0) as isOwnerMember, czl.przynaleznosc as breederDepartment, COALESCE(os.czlonek, 0) as isBreederMember
+						FROM pies p
+            			LEFT JOIN wlasciciel_pies wp on wp.id_pies = p.id_pies
+            			LEFT JOIN osoba o on o.id_osoba = wp.id_osoba
+            			LEFT JOIN rasa r on r.id_rasa = p.rasa
+            			LEFT JOIN masc m on m.id_masc = p.masc
+            			LEFT JOIN hodowca_pies hp on hp.id_pies = p.id_pies
+            			LEFT JOIN osoba os on os.id_osoba = hp.id_osoba
+						LEFT JOIN czlonek cz on cz.nr_leg = o.czlonek
+						LEFT JOIN czlonek czl on czl.nr_leg = os.czlonek
+						WHERE fullname LIKE :filter " . $condition .";");
 	
 	$stmt->bindParam(':filter', $filter);
-	$stmt->bindParam(':sex', $sex);
 	
 	$stmt->execute();
 	$dogs = $stmt->fetchAll();
 	return json_encode($dogs);
+}
+
+function GetPersonsAutoComplete($db, $filter)
+{
+	$filter = '%' . $filter . '%';
+	$stmt = $db->prepare("SELECT COALESCE(cz.nr_leg, o.id_osoba) as Id, CONCAT(o.imie, ' ', o.nazwisko) as name, COALESCE(o.czlonek, 0) as isMember,
+						cz.przynaleznosc as department, o.ulica as street, o.miejscowosc as city, o.kod as postal,
+						COALESCE(o.tel_kom, o.tel_stac) as mobile
+						FROM osoba o
+						LEFT JOIN czlonek cz on cz.nr_leg = o.czlonek 
+						WHERE o.imie LIKE :filter OR o.nazwisko LIKE :filter OR cz.nr_leg LIKE :filter
+						OR CONCAT(o.imie, ' ', o.nazwisko) LIKE :filter OR CONCAT(o.nazwisko, ' ', o.imie) LIKE :filter;");
+	
+	$stmt->bindParam(':filter', $filter);
+	
+	$stmt->execute();
+	$persons = $stmt->fetchAll();
+
+	return json_encode($persons);
 }

@@ -10,9 +10,7 @@ function GetAllLitters($db, $log)
 						FROM miot m
 						JOIN hodowla h on h.nr_hod = m.przydomek;");
 	
-	$stmt->bindParam(':id', $id);
 	$stmt->execute();
-
 	$litters = $stmt->fetchAll();
 	
 	return json_encode($litters);
@@ -20,7 +18,7 @@ function GetAllLitters($db, $log)
 
 function GetLitterById($db, $log, $dbw, $id)
 {
-    $log -> addInfo("Getting info abou litter: " . $id);	
+    $log -> addInfo("Getting info about litter: " . $id);	
 	$stmt = $db->prepare("SELECT m.data_zgl as submissionDate, m.ilosc as quantity, m.ilosc_suk as bitchQuantity, m.data_kry as copulationDate, m.data_ur as birthDate, 
 						m.suka as mother, m.pies as father, r.id_rasa as breedId, r.rasa as breed, h.przydomek as nickname, h.nr_hod as breedingId, cz.nr_leg as ownerId, 
 						cz.przynaleznosc as ownerDepartment, CONCAT(o.imie, ' ', o.nazwisko) as ownerName, m.adnotacje as additionalInfo, m.poprawnosc as accepted,
@@ -28,7 +26,7 @@ function GetLitterById($db, $log, $dbw, $id)
 						(select id_pies from pies where upper(fullname) = upper(m.suka) and plec = 'suka') as motherId,
 						m.creator as created_by, m.created, m.changed as modified, m.changed_by
 						FROM miot m
-						JOIN rasa r on r.id_rasa = m.rasa
+						LEFT JOIN rasa r on r.id_rasa = m.rasa
 						JOIN hodowla h on h.nr_hod = m.przydomek
 						JOIN czlonek_hodowla czh on czh.nr_hod = h.nr_hod
 						JOIN czlonek cz on cz.nr_leg = czh.nr_leg

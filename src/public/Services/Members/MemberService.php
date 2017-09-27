@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../Commons/CommonServiceHelperFunctions.php';
+require_once __DIR__ . '/../../FPDF/fpdf.php';
 require_once __DIR__ . '/../../../../../wp-load.php';
 require_once('ValidateMemberService.php');
 
@@ -8,26 +9,39 @@ function GetDepartmentMembers($db, $log, $department, $filter){
 	switch($filter)
 	{
 		case "all":
-			$condition = "";
+			$condition = "1=1";
 			break;
 		case "active":
-			$condition = "AND (l.status = 'aktywny' OR l.status = 'niepotwierdzony')";
+			$condition = "(l.status = 'aktywny' OR l.status = 'niepotwierdzony')";
 			break;
 		case "not-active":
-			$condition = "AND (l.status = 'blokada')";
+			$condition = "(l.status = 'blokada')";
 			break;
 		default:
 			$condition = '';
 			break;
 	}
-	
-	$stmt = $db->prepare("SELECT cz.nr_leg as Id, o.imie as name, o.nazwisko as surname, o.miejscowosc as city, cz.skladka as paid,
+	if($department == 'baza-czlonkow')
+	{
+		$stmt = $db->prepare("SELECT cz.nr_leg as Id, cz.data_przys as startDate, o.imie as name, o.nazwisko as surname, o.miejscowosc as city, cz.skladka as paid,
+					o.poprawnosc as accepted, GROUP_CONCAT(h.przydomek SEPARATOR ', ') as breeding, cz.przynaleznosc as department
+					FROM czlonek cz
+					JOIN osoba o on o.czlonek = cz.nr_leg
+					JOIN logowanie l on l.nr_leg = cz.nr_leg
+          			LEFT JOIN czlonek_hodowla czh on czh.nr_leg = cz.nr_leg
+          			LEFT JOIN hodowla h on h.nr_hod = czh.nr_hod
+					WHERE " . $condition . "
+          			GROUP BY cz.nr_leg;");
+	}
+	else
+	{
+		$stmt = $db->prepare("SELECT cz.nr_leg as Id, cz.data_przys as startDate, o.imie as name, o.nazwisko as surname, o.miejscowosc as city, cz.skladka as paid,
 						  o.poprawnosc as accepted
 						  FROM czlonek cz
 						  JOIN osoba o on o.czlonek = cz.nr_leg
 						  JOIN logowanie l on l.nr_leg = cz.nr_leg
-						  WHERE przynaleznosc = :department " . $condition . ";");
-
+						  WHERE przynaleznosc = :department AND " . $condition . ";");
+	}
 	$stmt->bindParam(':department', $department);
 	$stmt->execute();
 	$members = json_encode($stmt->fetchAll());
@@ -74,21 +88,22 @@ function AddMember($data, $db, $log, $userId, $dbw)
 
 	$log -> addInfo("Adding member for department: " . $data->department);	
 
-	$stmt = $db->prepare("INSERT INTO photo (copyright, tytul, posted_by) 
-						  VALUES (:copyright, :title, :userId);");
+	//PHOTO is no longer needed
+	// $stmt = $db->prepare("INSERT INTO photo (copyright, tytul, posted_by) 
+	// 					  VALUES (:copyright, :title, :userId);");
 
-	$stmt->bindParam(':copyright', $data->copyright);
-	$stmt->bindParam(':title', $data->photoTilte);
-	$stmt->bindParam(':userId', $userId);
+	// $stmt->bindParam(':copyright', $data->copyright);
+	// $stmt->bindParam(':title', $data->photoTilte);
+	// $stmt->bindParam(':userId', $userId);
 
-	$stmt->execute();
+	// $stmt->execute();
 
-	$photoId = $db->lastInsertId();
+	// $photoId = $db->lastInsertId();
 
 	$stmt = $db->prepare("INSERT INTO czlonek (data_ur, data_przys, skladka, przynaleznosc, funkcje, opis, adnotacje, creator, 
-						  created, changed_by, changed, zdjecie) 
+						  created, changed_by, changed) 
 						  VALUES (:birthDate, NOW(), :fee, :department, :functions, :characteristic, :additionalInfo, :userId, 
-						  NOW(), :userId, NOW(), :photoId);");
+						  NOW(), :userId, NOW());");
 	
 	$stmt->bindParam(':birthDate', $data->birthDate);
 	$stmt->bindParam(':fee', $data->fee);
@@ -97,7 +112,8 @@ function AddMember($data, $db, $log, $userId, $dbw)
 	$stmt->bindParam(':characteristic', $data->characteristic);
 	$stmt->bindParam(':additionalInfo', $data->additionalInfo);
 	$stmt->bindParam(':userId', $userId);
-	$stmt->bindParam(':photoId', $photoId);
+	//$stmt->bindParam(':photoId', $photoId);
+	//$stmt->bindParam(':photoId', null);
 
 	$stmt->execute();
 	$id = $db->lastInsertId();
@@ -190,47 +206,48 @@ function UpdateMember($data, $db, $log, $userId, $memberId, $changeEmail, $oldEm
 
 	$log -> addInfo("Updating member: " . $memberId);	
 
-	//GET photo id
-	$photoId = GetPhotoId($memberId, $db);
-	//Update photo
-	if ($photoId > 0) {
-		$stmt = $db->prepare("UPDATE photo set copyright = :copyright, tytul = :title, posted_by = :userId
-						  WHERE id_photo = :photoId;");
+	//PHOTO is no longer needed
+	// //GET photo id
+	// $photoId = GetPhotoId($memberId, $db);
+	// //Update photo
+	// if ($photoId > 0) {
+	// 	$stmt = $db->prepare("UPDATE photo set copyright = :copyright, tytul = :title, posted_by = :userId
+	// 					  WHERE id_photo = :photoId;");
 
-		$stmt->bindParam(':copyright', $data->copyright);
-		$stmt->bindParam(':title', $data->photoTilte);
-		$stmt->bindParam(':userId', $userId);
-		$stmt->bindParam(':photoId', $photoId);
+	// 	$stmt->bindParam(':copyright', $data->copyright);
+	// 	$stmt->bindParam(':title', $data->photoTilte);
+	// 	$stmt->bindParam(':userId', $userId);
+	// 	$stmt->bindParam(':photoId', $photoId);
 	
-		$stmt->execute();
-	}
-	else{
-		$stmt = $db->prepare("INSERT INTO photo (copyright, tytul, posted_by) 
-						  VALUES (:copyright, :title, :userId);");
+	// 	$stmt->execute();
+	// }
+	// else{
+	// 	$stmt = $db->prepare("INSERT INTO photo (copyright, tytul, posted_by) 
+	// 					  VALUES (:copyright, :title, :userId);");
 
-		$stmt->bindParam(':copyright', $data->copyright);
-		$stmt->bindParam(':title', $data->photoTilte);
-		$stmt->bindParam(':userId', $userId);
+	// 	$stmt->bindParam(':copyright', $data->copyright);
+	// 	$stmt->bindParam(':title', $data->photoTilte);
+	// 	$stmt->bindParam(':userId', $userId);
 
-		$stmt->execute();
+	// 	$stmt->execute();
 
-		$photoId = $db->lastInsertId();
+	// 	$photoId = $db->lastInsertId();
 
-		$stmt = $db->prepare("UPDATE czlonek set zdjecie = :photoId 
-						  	WHERE nr_leg = :memberId;");
+	// 	$stmt = $db->prepare("UPDATE czlonek set zdjecie = :photoId 
+	// 					  	WHERE nr_leg = :memberId;");
 
-		$stmt->bindParam(':photoId', $photoId);
-		$stmt->bindParam(':memberId', $memberId);
+	// 	$stmt->bindParam(':photoId', $photoId);
+	// 	$stmt->bindParam(':memberId', $memberId);
 
-		$stmt->execute();
-	}
+	// 	$stmt->execute();
+	// }
 	
 
-	$stmt->bindParam(':copyright', $data->copyright);
-	$stmt->bindParam(':title', $data->photoTilte);
-	$stmt->bindParam(':photoId', $photoId);
+	// $stmt->bindParam(':copyright', $data->copyright);
+	// $stmt->bindParam(':title', $data->photoTilte);
+	// $stmt->bindParam(':photoId', $photoId);
 
-	$stmt->execute();
+	//$stmt->execute();
 
 	$stmt = $db->prepare("UPDATE czlonek set data_ur = :birthDate, skladka = :fee, przynaleznosc = :department, funkcje = :functions,
 						 opis = :characteristic, adnotacje = :additionalInfo, changed_by = :userId, changed = NOW(), 
@@ -460,4 +477,105 @@ function RemoveMember($id, $db, $log, $userId, $email)
 	wp_delete_user( $user->ID );
 
 	return true;
+}
+
+function GetCertificate($db, $log, $id, $dbw)
+{
+	$member = json_decode(GetMemberById($db, $log, $id, $dbw));
+	
+	$pdf = CreateCertificate($db, $log, $id, $member, $dbw);
+
+	return $pdf->Output('S');
+}
+
+function SendCertificate($db, $log, $id, $dbw)
+{
+	$member = json_decode(GetMemberById($db, $log, $id, $dbw));
+	$pdf = CreateCertificate($db, $log, $id, $member, $dbw);
+	$attachment = $pdf->Output('S');
+	$message = file_get_contents(__DIR__ . '/../../email-templates/zaswiadczenie.html');
+	
+	 SendEmail($member->email, $member->name . " " . $member->surname, $message, 
+	 	"Zaswiadczenie o członkowstwie", "kontakt@pfk.org.pl", "Kontakt PFK", "Lp89!Mens511", true, $attachment);
+}
+
+function CreateCertificate($db, $log, $id, $member, $dbw)
+{
+	$pdf = new FPDF();
+	$pdf->AddPage();
+	$pdf->AddFont('arial2','','arial2.php');  //dodaje swoją czcionkę arialpl do dokumentu
+	$pdf->SetFont('arial2','',12);
+	$pdf->Image('https://pfk.org.pl/wp-content/uploads/pfk.png',60,10,90,0,'PNG',10,10,-300);
+	$pdf->Image('https://pfk.org.pl/wp-content/uploads/pdf_background.png',-80,30,350,0,'PNG',10,10,-300);
+	$pdf->SetXY(170, 40);
+	$pdf->Cell(30,20,'Sieradz, dnia ' . date("d") . ' ' . iconv("utf-8", "iso-8859-2",GetPolishMonth(date('M'))) . ' ' . date('Y') . ' r.', 0, 1, 'R');
+	$str = $member->name . " " . $member->surname . "\n" . $member->street . "\n" . $member->postal . " " . $member->city;
+	$str = iconv("utf-8", "iso-8859-2", $str);
+	$pdf->MultiCell(190,5,$str, 0, 'R');
+	$pdf->SetXY(10, 70);
+	$str = "ZAŚWIADCZENIE";
+	$str = iconv("utf-8", "iso-8859-2", $str);
+	$pdf->Cell(80);
+	$pdf->Cell(60, 70,$str);
+	$pdf->Ln();
+	$str = "o członkostwie";
+	$str = iconv("utf-8", "iso-8859-2", $str);
+	$pdf->Cell(82);
+	$pdf->Cell(60, -60,$str);
+	
+	$pdf->Ln();
+	$isMember = !isset($member->removeDate) || $member->removeDate != '' ? "nie jest" : "jest";
+	$currentYear = date("Y");
+	$feeStatus = $member->fee == 'zwolniony' || $member->fee == $currentYear ? "nie zalega" : "zalega";
+	$month = GetPolishMonth(date("M", strtotime($member->birthDate)));
+	
+	$str = "Zarząd Główny Polskiej Federacji Kynologicznej z siedzibą w Sieradzu potwierdza, że: \r\n\r\n"
+		. $member->name . " " . $member->surname . " ur. dnia " . date('d', strtotime($member->birthDate)) . " " . $month . " "  
+		. date('Y', strtotime($member->birthDate)) . " r. na dzień wystawienia niniejszego zaświadczenia " . $isMember 
+		. " członkiem stowarzyszenia i " . $feeStatus . " ze składkami za rok bieżący. Numer członkowski to " 
+		. GetMemberId($id, $member->startDate) . ".";
+	$str = iconv("utf-8", "iso-8859-2", $str);
+	$pdf->SetXY(10, 120);
+	$pdf->Write(5,$str);
+
+	$str = "Zarząd Główny \r\n";
+	$str = iconv("utf-8", "iso-8859-2", $str);
+	$pdf->SetXY(166, 150);
+	$pdf->Write(5,$str);
+	$str = "Polskiej Federacji Kynologicznej";
+	$str = iconv("utf-8", "iso-8859-2", $str);
+	$pdf->SetXY(134, 155);
+	$pdf->Write(5,$str);
+
+	$pdf->SetFontSize(8);
+	$str = "Niniejsze zaświadczenie wydaje się na prośbę zainteresowanego lub w związku z decyzją o wpisaniu na listę członków Polskiej Federacji Kynologicznej.\r\nDokument elektroniczny wydany zgodnie z postanowieniami statutu oraz innych przepisów obowiązujących w Polskiej Federacji Kynologicznej i nie wymaga podpisu.\r\nZaświadczenie jest ważne 14 dni, jednak nie dłużej niż na koniec roku bieżącego.";
+	$str = iconv("utf-8", "iso-8859-2", $str);
+	$pdf->SetXY(10, 240);
+	$pdf->Write(5,$str);
+
+	$pdf->SetTextColor(211,211,211);
+	$str = "Polska Federacja Kynologiczna | ul. Lokajskiego 1/10 | 98-200 Sieradz | https://pfk.org.pl";
+	$str = iconv("utf-8", "iso-8859-2", $str);
+	$pdf->SetXY(50, 270);
+	$pdf->Write(5,$str);
+
+	return $pdf;
+}
+
+function GetMemberId($id, $start_date) {
+	list($year, $month, $day) = explode("-", $start_date);
+	$year = $year[2].$year[3];
+	if($id>=100 and $id<1000) $id = "0".$id;
+	elseif($id>=10 and $id<100) $id = "00".$id;
+	elseif($id<10) $id = "000".$id;
+	return $id."/".$year;
+}
+
+function GetPolishMonth( $m ){
+	$m = date("M" , strtotime($m));
+	$months = array( 'Jan' => 'stycznia', 'Feb' => 'lutego', 'Mar' => 'marca', 'Apr' => 'kwietnia', 
+		'May' => 'maja', 'Jun' => 'czerwca', 'Jul' => 'lipca', 'Aug' => 'sierpnia','Sep' => "września", 'Sept' => "września", 
+		'Oct' => 'października', 'Nov' => 'listopada', 'Dec' => 'grudnia');
+	
+	return $months[ $m ];
 }

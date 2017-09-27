@@ -191,3 +191,18 @@ function GetMembersForAutoComplete($db, $filter)
 
 	return json_encode($members);
 }
+
+function GetDogsAutoCompleteForPublic($db, $filter)
+{
+	$filter = '%' . $filter . '%';
+	$stmt = $db->prepare("SELECT  p.fullname as nickname, r.rasa as breedName, p.data_ur as birthDate
+						FROM pies p
+            			LEFT JOIN rasa r on r.id_rasa = p.rasa
+						WHERE fullname LIKE :filter;");
+	
+	$stmt->bindParam(':filter', $filter);
+	
+	$stmt->execute();
+	$dogs = $stmt->fetchAll();
+	return json_encode($dogs);
+}

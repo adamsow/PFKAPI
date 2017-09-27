@@ -6,6 +6,7 @@
 	$pages = require_once 'pages.php';
 	$settings = require_once '../../private/local.php';
 	require_once 'CommonFunctions.php';
+	require_once 'Services/Account/AccountService.php';
 
 	$app = new \Slim\Slim($settings);
 	$app->pages = $pages;
@@ -17,18 +18,20 @@
 		$logger->pushHandler($file_handler);
 		return $logger;
 	});
+		   
 	//set up JWT tokens
 	$app->add(new \Slim\Middleware\JwtAuthentication([
 		"path" => "/",
 		"logger" => $app->log,
-		"passthrough" => ["/token", "/breedings", "/studs", "/publiclitters", "/exhibition"],	
+		"passthrough" => ["/token", "/breedings", "/studs", "/publiclitters", "/exhibition","/dogsautocomplete", "/memberCertificate"],	
 		"secret" => $settings['settings']['secret'],
 		'displayErrorDetails' => false,
 		"callback" => function ($options) use ($app) {
 			$app->jwt = $options["decoded"];
         }
 	]));
-
+	
+	
 	$app->config('debug', false);
 
 	//set up PFK DB connection
@@ -93,7 +96,9 @@
 				$app->stop();
             }
         };
-    };
+	};
+
+
 
 	$authorization = function($app)
     {
@@ -110,7 +115,21 @@
 				$app->stop();
 			}
         };
-    };
+	};
+	
+	$getTokenFromParams = function($app)
+	{
+		return function($page) use ($app)
+		{
+			 $token = $page->params["token"];
+			 $app->log -> addInfo("Getting members for department: ". $token);
+			 if (false === empty($token)) {
+				 $app->request->headers->set("Authorization", "Bearer $token");
+				 $decoded = DecodeToken($token, '8SaXjUDp1uQM8cPNACe0');
+				 $app->jwt = $decoded;
+			 }
+		};
+	};
 
 	$writeAccess = function($app)
 	{

@@ -60,4 +60,12 @@ $app->get('/usersautocomplete/:filter', $referer($app), $writeAccess($app), func
 	echo $members;
 });
 
+//GET dog autocomplete
+$app->get('/dogsautocomplete/:filter', $referer($app), function ($filter) use ($app) 
+{
+	$db = $app->db;			
+	$dogs = GetDogsAutoCompleteForPublic($db, $filter);
+	echo $dogs;
+});
+
 $app->run();

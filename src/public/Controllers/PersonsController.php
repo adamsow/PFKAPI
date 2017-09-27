@@ -13,7 +13,7 @@
 		echo '{"access":"' . $access . '","persons":' . $persons . '}';
 	});
 
-	//GET info about member
+	//GET info about person
 	$app->get('/persons/:id', $referer($app), $authorization($app), function ($id) use ($app) 
 	{
 		$log = $app->log;
@@ -23,7 +23,7 @@
 		echo $person;
 	});
 
-	//POST new member
+	//POST new person
 	$app->post('/persons', $referer($app), $writeAccess($app), function () use ($app) 
 	{
 		$log = $app->log;

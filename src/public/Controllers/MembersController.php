@@ -110,5 +110,27 @@
 		$consts = GetMemberConsts($db, $log);
 		echo $consts;
 	});
+
+	//GET download certificate
+	$app->get('/memberCertificate/:department/:id/:token/:fullname',  $getTokenFromParams($app), $referer($app),  $authorization($app), function ($department, $id, $token, $fullname) use ($app) 
+	{
+		$log = $app->log;
+		$db = $app->db;
+		$dbw = $app->dbw;
+		$app->response->headers->set('Content-Type', 'application/pdf');
+		$app->response->write( GetCertificate($db, $log, $id, $dbw) );
+		
+		return $app->response;
+	});
+
+	//GET send certificate to members email
+	$app->get('/memberCertificateSend/:department/:id',  $referer($app),  $authorization($app), function ($department, $id) use ($app) 
+	{
+		$log = $app->log;
+		$db = $app->db;
+		$dbw = $app->dbw;
+		$app->response->headers->set('Content-Type', 'application/pdf');
+		SendCertificate($db, $log, $id, $dbw);
+	});
 	
 	$app->run();
