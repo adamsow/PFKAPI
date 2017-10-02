@@ -98,8 +98,6 @@
         };
 	};
 
-
-
 	$authorization = function($app)
     {
         return function($accessPage) use ($app)

@@ -356,6 +356,18 @@ function GetDepartments($db, $log)
 	return $departments;
 }
 
+function GetExhibtionForMailAndSMS($db)
+{
+    $stmt = $db->prepare("SELECT id_wystawa AS id, pelna_nazwa AS name 
+                          FROM wystawa 
+                          WHERE data >  CURDATE() - interval 14 day AND data < CURDATE();");
+
+    $stmt->execute();
+    $exhibitions = json_encode($stmt->fetchAll());
+
+    return $exhibitions;
+}
+
 function CheckFile()
 {
 	// Undefined | Multiple Files | $_FILES Corruption Attack
@@ -531,4 +543,94 @@ function GetPersonsAutoComplete($db, $filter)
 	$persons = $stmt->fetchAll();
 
 	return json_encode($persons);
+}
+
+function GetAllMembersRecipients($db, $condition, $to)
+{
+    if ($to == 'all') {
+        $cond = '';
+    }
+    else{
+        $cond = "AND cz.przynaleznosc = '" . $to . "'";
+    }
+    $stmt = $db->prepare("SELECT cz.skladka as fee, o.email, CONCAT(o.imie, ' ', o.nazwisko) as fullname, o.tel_kom as mobile, cz.nr_leg as id 
+                        FROM czlonek cz
+                        JOIN logowanie l on l.nr_leg = cz.nr_leg
+                        JOIN osoba o on o.czlonek = cz.nr_leg
+                        WHERE l.status = 'aktywny' 
+                        "  . $cond . ";");
+    
+    $stmt->execute();
+    $members = $stmt->fetchAll();
+    $membersTo = GetMembersToEmailAndSMS($members, $condition);
+
+    return $membersTo;
+}
+
+function GetAllBreedingsRecipients($db, $condition)
+{
+    $stmt = $db->prepare("SELECT cz.skladka as fee, o.email, CONCAT(o.imie, ' ', o.nazwisko) as fullname, o.tel_kom as mobile, cz.nr_leg as id
+                        FROM czlonek cz
+                        JOIN czlonek_hodowla czh on czh.nr_leg = cz.nr_leg
+                        JOIN logowanie l on l.nr_leg = cz.nr_leg
+                        JOIN osoba o on o.czlonek = cz.nr_leg
+                        WHERE l.status = 'aktywny';");
+    
+    $stmt->execute();
+    $members = $stmt->fetchAll();
+    $membersTo = GetMembersToEmailAndSMS($members, $condition);
+    
+
+    return $membersTo;
+}
+
+function  GetExhibitionMemebersRecipients($db, $condition)
+{
+    $stmt = $db->prepare("SELECT email, CONCAT(imie, ' ', nazwisko) as fullname, tel as mobile 
+                        FROM Uczestnicy 
+                        WHERE wystawa_id = :id;");
+
+    $stmt->bindParam(':id', $condition);
+    $stmt->execute();
+    $members = $stmt->fetchAll();
+    $membersTo = GetMembersToEmailAndSMS($members, $condition);
+
+
+    return $membersTo;
+}
+
+function GetMembersToEmailAndSMS($members, $condition)
+{
+    $membersTo = array();
+    $currentYear = date("Y");
+    foreach ($members as $member) {
+        switch ($condition) {
+            case 'activeWithNonActualFee':
+                if ($member['fee'] != 'zwolniony' && $member['fee'] != $currentYear) {
+                    array_push($membersTo, $member);
+                }
+                break;
+            case 'activeWithActualFee':
+                if ($member['fee'] == 'zwolniony' || $member['fee'] == $currentYear) {
+                    array_push($membersTo, $member);
+                }
+                break;
+            default:
+                array_push($membersTo, $member);
+                break;
+        }
+    }
+
+    return $membersTo;
+}
+
+function guidv4()
+{
+    if (function_exists('com_create_guid') === true)
+        return trim(com_create_guid(), '{}');
+
+    $data = openssl_random_pseudo_bytes(16);
+    $data[6] = chr(ord($data[6]) & 0x0f | 0x40); // set version to 0100
+    $data[8] = chr(ord($data[8]) & 0x3f | 0x80); // set bits 6-7 to 10
+    return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
 }

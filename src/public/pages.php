@@ -8,6 +8,8 @@ $breedings = '/Centrala/Hodowle';
 $litters = '/Centrala/Mioty';
 $DNA = '/Centrala/baza-dna';
 $mail = '/Centrala/Korespondencja';
+$SMS = '/Centrala/SMS';
+$SMSReport = '/Centrala/raport-sms';
 return 
 [
     'sites' => 
@@ -74,6 +76,10 @@ return
         '/personsautocompletedna/:filter' => $DNA,
         'massmail' => $mail,
         '/massmailconsts' => $mail,
-        '/sendemail' => $mail
+        '/sendemail' => $mail,
+        'masssms' => $SMS,
+        '/masssmsconsts' => $SMS,
+        '/sendsms' => $SMS,
+        '/smsreport' => $SMSReport,
     ]
 ];
