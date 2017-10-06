@@ -23,7 +23,7 @@
 	$app->add(new \Slim\Middleware\JwtAuthentication([
 		"path" => "/",
 		"logger" => $app->log,
-		"passthrough" => ["/token", "/breedings", "/studs", "/publiclitters", "/exhibition","/dogsautocomplete", "/memberCertificate"],	
+		"passthrough" => ["/token", "/breedings", "/studs", "/publiclitters", "/exhibition","/dogsautocomplete", "/memberCertificate", "/breederCertificate"],	
 		"secret" => $settings['settings']['secret'],
 		'displayErrorDetails' => false,
 		"callback" => function ($options) use ($app) {

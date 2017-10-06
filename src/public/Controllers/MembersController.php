@@ -32,7 +32,7 @@
         $body = $app->request->getBody();
         $userId = $app->jwt->user_id;
         $data = json_decode($body);
-		if (PersonExists($db, $data)) {
+		if (PersonExists($db, $data, null)) {
 			$app->response->status(409);
 			echo "member_exists";
 			return;
@@ -67,7 +67,7 @@
 		if ($oldData->surname !== $data->surname
 			|| $oldData->name !== $data->name
 			|| $oldData->city !== $data->city) {
-			if (PersonExists($db, $data)) {
+			if (PersonExists($db, $data, $id)) {
 				$app->response->status(409);
 				echo "member_exists";
 				return;
@@ -118,7 +118,7 @@
 		$db = $app->db;
 		$dbw = $app->dbw;
 		$app->response->headers->set('Content-Type', 'application/pdf');
-		$app->response->write( GetCertificate($db, $log, $id, $dbw) );
+		$app->response->write( GetCertificate($db, $log, $id, $dbw, false) );
 		
 		return $app->response;
 	});
@@ -130,7 +130,29 @@
 		$db = $app->db;
 		$dbw = $app->dbw;
 		$app->response->headers->set('Content-Type', 'application/pdf');
-		SendCertificate($db, $log, $id, $dbw);
+		SendCertificate($db, $log, $id, $dbw, false);
+	});
+
+	//GET download certificate for breeder
+	$app->get('/breederCertificate/:id/:token/:fullname',  $getTokenFromParams($app), $referer($app),  $authorization($app), function ($id, $token, $fullname) use ($app) 
+	{
+		$log = $app->log;
+		$db = $app->db;
+		$dbw = $app->dbw;
+		$app->response->headers->set('Content-Type', 'application/pdf');
+		$app->response->write( GetCertificate($db, $log, $id, $dbw, true) );
+		
+		return $app->response;
+	});
+
+	//GET send certificate to breeder email
+	$app->get('/breederCertificateSend/:id',  $referer($app),  $authorization($app), function ($id) use ($app) 
+	{
+		$log = $app->log;
+		$db = $app->db;
+		$dbw = $app->dbw;
+		$app->response->headers->set('Content-Type', 'application/pdf');
+		SendCertificate($db, $log, $id, $dbw, true);
 	});
 	
 	$app->run();

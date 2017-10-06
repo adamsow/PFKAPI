@@ -68,9 +68,26 @@ function UserExists($email)
 	return false;
 }
 
-function PersonExists($db, $data)
+function PersonExists($db, $data, $id)
 {
-    return CheckIfPersonExists($db, $data);
+	$stmt = $db->prepare("SELECT count(*) 
+						FROM osoba 
+						WHERE imie = :name and nazwisko = :surname and miejscowosc = :city
+						AND (:id is null OR czlonek <> :id)");
+
+	$stmt->bindParam(':name', $data->name);
+	$stmt->bindParam(':surname', $data->surname);
+	$stmt->bindParam(':city', $data->city);
+	$stmt->bindParam(':id', $id);
+
+	$stmt->execute();
+
+	$number_of_rows = $stmt->fetchColumn(); 
+
+	if($number_of_rows > 0)
+		return true;
+
+	return false;
 }
 
 function AddMember($data, $db, $log, $userId, $dbw)
@@ -332,7 +349,7 @@ function GetMemberById($db, $log, $id, $dbw)
 	$member['changed_by'] = $modifiedBy;
 	
 	//Get hodowle
-	$stmt = $db->prepare("SELECT h.przydomek as breedingName, h.nr_hod as breedingId
+	$stmt = $db->prepare("SELECT h.przydomek as breedingName, h.nr_hod as breedingId, h.data_wrej as unregisterDate
 						FROM czlonek_hodowla czh  
 						JOIN hodowla h on h.nr_hod = czh.nr_hod
 						WHERE czh.nr_leg = :id;");
@@ -479,27 +496,28 @@ function RemoveMember($id, $db, $log, $userId, $email)
 	return true;
 }
 
-function GetCertificate($db, $log, $id, $dbw)
+function GetCertificate($db, $log, $id, $dbw, $isBreeder)
 {
 	$member = json_decode(GetMemberById($db, $log, $id, $dbw));
-	
-	$pdf = CreateCertificate($db, $log, $id, $member, $dbw);
+	$pdf = CreateCertificate($db, $log, $id, $member, $dbw, $isBreeder);
 
 	return $pdf->Output('S');
 }
 
-function SendCertificate($db, $log, $id, $dbw)
+function SendCertificate($db, $log, $id, $dbw, $isBreeder)
 {
 	$member = json_decode(GetMemberById($db, $log, $id, $dbw));
-	$pdf = CreateCertificate($db, $log, $id, $member, $dbw);
+	$pdf = CreateCertificate($db, $log, $id, $member, $dbw, $isBreeder);
 	$attachment = $pdf->Output('S');
 	$message = file_get_contents(__DIR__ . '/../../email-templates/zaswiadczenie.html');
+	$message = $isBreeder ? str_replace("{SUBJECT}", "Hodowcy", $message) : str_replace("{SUBJECT}", "o członkostwie w PFK", $message);
+	$subject = $isBreeder ? "Zaswiadczenie hodowcy" : "Zaswiadczenie o członkowstwie";
 	
 	 SendEmail($member->email, $member->name . " " . $member->surname, $message, 
-	 	"Zaswiadczenie o członkowstwie", "kontakt@pfk.org.pl", "Kontakt PFK", "Lp89!Mens511", true, $attachment);
+	 	$subject, "kontakt@pfk.org.pl", "Kontakt PFK", "Lp89!Mens511", true, $attachment);
 }
 
-function CreateCertificate($db, $log, $id, $member, $dbw)
+function CreateCertificate($db, $log, $id, $member, $dbw, $isBreeder)
 {
 	$pdf = new FPDF();
 	$pdf->AddPage();
@@ -518,21 +536,45 @@ function CreateCertificate($db, $log, $id, $member, $dbw)
 	$pdf->Cell(80);
 	$pdf->Cell(60, 70,$str);
 	$pdf->Ln();
-	$str = "o członkostwie";
+	$str = $isBreeder ? "HODOWCY" : "o członkostwie";
 	$str = iconv("utf-8", "iso-8859-2", $str);
-	$pdf->Cell(82);
+	if($isBreeder)
+	{
+		$pdf->Cell(87);
+	}
+	else
+	{
+		$pdf->Cell(82);
+	}
 	$pdf->Cell(60, -60,$str);
 	
 	$pdf->Ln();
-	$isMember = !isset($member->removeDate) || $member->removeDate != '' ? "nie jest" : "jest";
+	$isMember = isset($member->removeDate) && $member->removeDate != '' ? "nie jest" : "jest";
 	$currentYear = date("Y");
 	$feeStatus = $member->fee == 'zwolniony' || $member->fee == $currentYear ? "nie zalega" : "zalega";
 	$month = GetPolishMonth(date("M", strtotime($member->birthDate)));
-	
+	$breedings = '';
+	$breedingsIds = '';
+	$hasBreeding = ' oraz prowadzi';
+	if ($isBreeder) {
+		if (isset($member->breedings)) {
+			foreach ($member->breedings as $breeding) {
+				$breedingsIds .= GetBreedingId($breeding->breedingId) . ',';
+				$breedings .= $breeding->breedingName . ',';
+				if (isset($breeding->unregisterDate) && $breeding->unregisterDate != '') {
+					$hasBreeding = ' oraz, że członek prowadził';
+				}
+			}
+			$breedings = rtrim($breedings, ',');
+			$breedingsIds = rtrim($breedingsIds, ',');
+		}
+	}
+
+	$breeding = $isBreeder ? $hasBreeding ." hodowlę psów rasowych pod przydomkiem \"" . $breedings . "\" zarejestrowaną pod numerem " . $breedingsIds : "";
 	$str = "Zarząd Główny Polskiej Federacji Kynologicznej z siedzibą w Sieradzu potwierdza, że: \r\n\r\n"
 		. $member->name . " " . $member->surname . " ur. dnia " . date('d', strtotime($member->birthDate)) . " " . $month . " "  
 		. date('Y', strtotime($member->birthDate)) . " r. na dzień wystawienia niniejszego zaświadczenia " . $isMember 
-		. " członkiem stowarzyszenia i " . $feeStatus . " ze składkami za rok bieżący. Numer członkowski to " 
+		. " członkiem stowarzyszenia i " . $feeStatus . " ze składkami za rok bieżący" . $breeding . ". Numer członkowski to " 
 		. GetMemberId($id, $member->startDate) . ".";
 	$str = iconv("utf-8", "iso-8859-2", $str);
 	$pdf->SetXY(10, 120);
@@ -578,4 +620,11 @@ function GetPolishMonth( $m ){
 		'Oct' => 'października', 'Nov' => 'listopada', 'Dec' => 'grudnia');
 	
 	return $months[ $m ];
+}
+
+function GetBreedingId($id) {
+	if($id>=100 and $id<1000) $id = "0".$id;
+	elseif($id>=10 and $nr_hod<100) $id = "00".$id;
+	elseif($id<10) $id = "000".$id;
+	return "H".$id;
 }

@@ -60,6 +60,8 @@ return
         '/deleteBreeding/:id' => $breedings,
         '/usersautocomplete/:filter' => $breedings,
         '/breedsautocompletebreedings/:filter' => $breedings,
+        '/breederCertificate/:id/:token/:fullname' => $breedings,
+        '/breederCertificateSend/:id' => $breedings,
         'litters' => $litters,
         '/litters' => $litters,
         '/litters/:id' => $litters,
