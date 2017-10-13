@@ -177,7 +177,7 @@ function checkAddress($address){
 }
 
 function checkWebsite($website){
-	if(!preg_match('/^[a-z0-9_.\/-]{5,50}$/', $website)) 
+	if(!preg_match('/^[a-z0-9_.\/-:]{5,50}$/', $website)) 
 		return false; 
 	
 	return true;

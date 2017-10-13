@@ -7,8 +7,9 @@
 	{
 		$log = $app->log;
         $dbw = $app->dbw;
+        $db = $app->db;
         $secret = $app->secret;
-        $token = GetToken($name, $password, $dbw, $log, $secret);
+        $token = GetToken($name, $password, $dbw, $log, $secret, $db);
         if($token === false)
         {
             $log -> addInfo("User " . $name . " not found");

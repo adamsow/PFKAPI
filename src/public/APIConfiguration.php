@@ -11,6 +11,7 @@
 	$app = new \Slim\Slim($settings);
 	$app->pages = $pages;
 	$app->err = $err;
+	$app->secret = $settings['settings']['secret'];
 	//set up logging
 	$app->container->singleton('log', function () {
 		$logger = new \Monolog\Logger('PFK_API');
@@ -23,8 +24,9 @@
 	$app->add(new \Slim\Middleware\JwtAuthentication([
 		"path" => "/",
 		"logger" => $app->log,
-		"passthrough" => ["/token", "/breedings", "/studs", "/publiclitters", "/exhibition","/dogsautocomplete", "/memberCertificate", "/breederCertificate"],	
-		"secret" => $settings['settings']['secret'],
+		"passthrough" => ["/token", "/breedings", "/studs", "/publiclitters", "/exhibition","/dogsautocomplete",
+			"/memberCertificate","/breederCertificate","/mydetailscertificate/:token/:fullname"],	
+		"secret" => $app->secret,
 		'displayErrorDetails' => false,
 		"callback" => function ($options) use ($app) {
 			$app->jwt = $options["decoded"];

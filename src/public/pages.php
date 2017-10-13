@@ -10,6 +10,7 @@ $DNA = '/Centrala/baza-dna';
 $mail = '/Centrala/Korespondencja';
 $SMS = '/Centrala/SMS';
 $SMSReport = '/Centrala/raport-sms';
+$myAccount = '/moje-pfk';
 return 
 [
     'sites' => 
@@ -83,5 +84,14 @@ return
         '/masssmsconsts' => $SMS,
         '/sendsms' => $SMS,
         '/smsreport' => $SMSReport,
+        '/mydetails' => $myAccount,
+        '/updatemydetails' => $myAccount,
+        '/mydetailscertificate/:token/:fullname' => $myAccount,
+        '/mybreedings' => $myAccount,
+        '/updatemybreedings' => $myAccount,
+        '/breedsautocompletemybreedings/:filter' => $myAccount,
+        '/mybreedingscertificate/:token/:fullname' => $myAccount,
+        '/mydogs' => $myAccount,
+        '/mydogs/:id' => $myAccount,
     ]
 ];

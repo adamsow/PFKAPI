@@ -634,3 +634,21 @@ function guidv4()
     $data[8] = chr(ord($data[8]) & 0x3f | 0x80); // set bits 6-7 to 10
     return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
 }
+
+function DeleteBreedingBreedConnection($db, $id)
+{
+	$stmt = $db->prepare("DELETE FROM rasa_hodowla WHERE nr_hod = :id;");
+	$stmt->bindParam(':id', $id);
+	$stmt->execute();
+}
+
+function CreateBreedingBreedConnection($db, $id, $data)
+{
+	//add breeding - breeds connection
+	foreach ($data->breeds as $breedId) {
+		$stmt = $db->prepare("INSERT INTO rasa_hodowla (id_rasa, nr_hod) VALUES (:breedId, :breedingId);");
+		$stmt->bindParam(':breedId', $breedId);
+		$stmt->bindParam(':breedingId', $id);
+		$stmt->execute();
+	}
+}

@@ -214,27 +214,9 @@ function CreateBreedingMemberConnection($db, $id, $data)
 	}
 }
 
-function CreateBreedingBreedConnection($db, $id, $data)
-{
-	//add breeding - breeds connection
-	foreach ($data->breeds as $breedId) {
-		$stmt = $db->prepare("INSERT INTO rasa_hodowla (id_rasa, nr_hod) VALUES (:breedId, :breedingId);");
-		$stmt->bindParam(':breedId', $breedId);
-		$stmt->bindParam(':breedingId', $id);
-		$stmt->execute();
-	}
-}
-
 function DeleteBreedingMemberConnection($db, $id)
 {
 	$stmt = $db->prepare("DELETE FROM czlonek_hodowla WHERE nr_hod = :id;");
-	$stmt->bindParam(':id', $id);
-	$stmt->execute();
-}
-
-function DeleteBreedingBreedConnection($db, $id)
-{
-	$stmt = $db->prepare("DELETE FROM rasa_hodowla WHERE nr_hod = :id;");
 	$stmt->bindParam(':id', $id);
 	$stmt->execute();
 }

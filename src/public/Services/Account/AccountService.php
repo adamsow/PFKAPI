@@ -1,16 +1,16 @@
 <?php
 use \Firebase\JWT\JWT;
 
-function GetToken($username, $password, $dbw, $log, $secret)
+function GetToken($username, $password, $dbw, $log, $secret, $db)
 {
 	require_once('../wp-functions.php');
 	require_once('../../vendor/firebase/php-jwt/src/JWT.php');
 	require_once('../../vendor/tuupola/slim-jwt-auth/src/JwtAuthentication.php');
 
 	$log -> addInfo("Getting token for user: " . $username);
-	$stmt = $dbw->prepare("SELECT wpu.user_pass, wpu.id, wpum.meta_value 
+	$stmt = $dbw->prepare("SELECT wpu.user_pass, wpu.id, wpum.meta_value, wpu.user_email as email
 		FROM wp_users wpu join wp_usermeta wpum on wpum.user_id = wpu.id 
-		WHERE (wpu.user_nicename=:username OR wpu.user_email=:username) AND meta_key ='wp_capabilities'");
+		WHERE (wpu.user_login=:username OR wpu.user_email=:username) AND meta_key ='wp_capabilities'");
 	$stmt->bindParam(':username', $username);
 	$stmt->execute();
 	
@@ -20,6 +20,15 @@ function GetToken($username, $password, $dbw, $log, $secret)
 
 	if(wp_check_password($password, $user['user_pass']) === false)
 		return false;
+
+	//get memberId base on email
+	$stmt = $db->prepare("SELECT cz.nr_leg as memberId
+		FROM osoba o
+		JOIN czlonek cz on cz.nr_leg = o.czlonek 
+		WHERE o.email = :email;");
+	$stmt->bindParam(':email', $user['email']);
+	$stmt->execute();
+	$member = $stmt->fetch();
 	
 	$roles = unserialize(stripslashes($user['meta_value']));
 	$now = new DateTime();
@@ -29,10 +38,11 @@ function GetToken($username, $password, $dbw, $log, $secret)
 	$payload = [
 		"username" => $username,
 		"user_id" => $user['id'],
+		"member_id" => $member['memberId'],
 		"jti" => $jti,
 		"iat" => $now->getTimeStamp(),
 		"exp" => $future->getTimeStamp(),
-		"iss" => "https://c-pfk.pl",
+		"iss" => "https://pfk.org.pl",
 		"aud" => "https://pfk.org.pl",
 		"scope" => array_keys($roles)
 	];
