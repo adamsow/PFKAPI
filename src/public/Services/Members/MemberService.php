@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../Commons/CommonServiceHelperFunctions.php';
 require_once __DIR__ . '/../../FPDF/fpdf.php';
-//require_once __DIR__ . '/../../../../../wp-load.php';
+require_once __DIR__ . '/../../../../../wp-load.php';
 require_once('ValidateMemberService.php');
 
 function GetDepartmentMembers($db, $log, $department, $filter){

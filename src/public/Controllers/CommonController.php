@@ -68,4 +68,15 @@ $app->get('/dogsautocomplete/:filter', $referer($app), function ($filter) use ($
 	echo $dogs;
 });
 
+//POST verify membership
+$app->post('/verfifymembership', $referer($app), function () use ($app) 
+{
+	$db = $app->db;
+	$body = $app->request->getBody();
+	$data = json_decode($body);
+	$id = $data->id;
+	$result = VerfifyMembership($db, $id);
+	echo $result;
+});
+
 $app->run();

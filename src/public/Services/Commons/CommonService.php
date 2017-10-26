@@ -206,3 +206,28 @@ function GetDogsAutoCompleteForPublic($db, $filter)
 	$dogs = $stmt->fetchAll();
 	return json_encode($dogs);
 }
+
+function VerfifyMembership($db, $id)
+{
+	if ($id === '') 
+	{
+		return false;
+	}
+
+	$stmt = $db->prepare("SELECT skladka as fee
+						FROM czlonek
+						WHERE nr_leg = :id and (data_stop is null || data_stop ='');");
+
+	$stmt->bindParam(':id', $id);
+
+	$stmt->execute();
+	$fee = $stmt->fetch();
+
+	if ($fee === null || $fee['fee'] === '') {
+		return false;
+	}
+
+	$currentYear = date("Y");
+	$feeStatus = $fee['fee'] == 'zwolniony' || $fee['fee'] == $currentYear ? 'true' : 'false';
+	return $feeStatus;
+}

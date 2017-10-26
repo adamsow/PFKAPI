@@ -11,6 +11,7 @@ $mail = '/Centrala/Korespondencja';
 $SMS = '/Centrala/SMS';
 $SMSReport = '/Centrala/raport-sms';
 $myAccount = '/moje-pfk';
+$lineages = '/Centrala/Rodowody';
 return 
 [
     'sites' => 
@@ -93,5 +94,8 @@ return
         '/mybreedingscertificate/:token/:fullname' => $myAccount,
         '/mydogs' => $myAccount,
         '/mydogs/:id' => $myAccount,
+        'lineages' => $lineages,
+        '/dogswithlineage' => $lineages,
+        '/dogswithlineage/:id' => $lineages,
     ]
 ];

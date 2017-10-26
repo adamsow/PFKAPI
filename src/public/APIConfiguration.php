@@ -25,7 +25,7 @@
 		"path" => "/",
 		"logger" => $app->log,
 		"passthrough" => ["/token", "/breedings", "/studs", "/publiclitters", "/exhibition","/dogsautocomplete",
-			"/memberCertificate","/breederCertificate","/mydetailscertificate/:token/:fullname"],	
+			"/memberCertificate","/breederCertificate","/mydetailscertificate/:token/:fullname", "/verfifymembership"],	
 		"secret" => $app->secret,
 		'displayErrorDetails' => false,
 		"callback" => function ($options) use ($app) {
