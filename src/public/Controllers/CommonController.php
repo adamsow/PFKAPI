@@ -61,10 +61,10 @@ $app->get('/usersautocomplete/:filter', $referer($app), $writeAccess($app), func
 });
 
 //GET dog autocomplete
-$app->get('/dogsautocomplete/:filter', $referer($app), function ($filter) use ($app) 
+$app->get('/dogsfromdnaautocomplete/:filter', $referer($app), function ($filter) use ($app) 
 {
 	$db = $app->db;			
-	$dogs = GetDogsAutoCompleteForPublic($db, $filter);
+	$dogs = GetDogsFromDNAAutoCompleteForPublic($db, $filter);
 	echo $dogs;
 });
 

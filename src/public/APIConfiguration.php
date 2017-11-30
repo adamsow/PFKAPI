@@ -24,7 +24,7 @@
 	$app->add(new \Slim\Middleware\JwtAuthentication([
 		"path" => "/",
 		"logger" => $app->log,
-		"passthrough" => ["/token", "/breedings", "/studs", "/publiclitters", "/exhibition","/dogsautocomplete",
+		"passthrough" => ["/token", "/breedings", "/studs", "/publiclitters", "/exhibition","/dogsfromdnaautocomplete",
 			"/memberCertificate","/breederCertificate","/mydetailscertificate/:token/:fullname", "/verfifymembership"],	
 		"secret" => $app->secret,
 		'displayErrorDetails' => false,

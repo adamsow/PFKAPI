@@ -108,7 +108,15 @@
 		echo $colors;
     });
 
-     //GET persons autocomplete
+    //GET persons autocomplete
+	$app->get('/personsautocompletedna/:filter', $referer($app), $writeAccess($app), function ($filter) use ($app) 
+	{
+		$db = $app->db;			
+		$persons = GetPersonsAutoCompleteFromCommon($db, $filter);
+		echo $persons;
+    });
+
+    //GET persons autocomplete
 	$app->get('/personsautocompletedna/:filter', $referer($app), $writeAccess($app), function ($filter) use ($app) 
 	{
 		$db = $app->db;			

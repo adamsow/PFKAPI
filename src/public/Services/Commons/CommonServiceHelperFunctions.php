@@ -326,10 +326,10 @@ function GetUser($id, $dbw)
 	$stmt = $dbw->prepare("Select display_name from wp_users where id = :id;");
 	$stmt->bindParam(':id', $id);
 	$stmt->execute();
-	
 	$result = $stmt->fetch();
-	
-	return $result['display_name'];
+
+	$name = $result['display_name'] == null ? ' ' : $result['display_name'];
+	return $name;
 }
 
 function GetApplicationConsts($db, $log)
@@ -642,6 +642,20 @@ function DeleteBreedingBreedConnection($db, $id)
 	$stmt->execute();
 }
 
+function DeleteDogBreederConnectionByDogId($db, $id)
+{
+	$stmt = $db->prepare("DELETE FROM hodowca_pies WHERE id_pies = :id;");
+	$stmt->bindParam(':id', $id);
+	$stmt->execute();
+}
+
+function DeleteDogOwnerConnectionByDogId($db, $id)
+{
+	$stmt = $db->prepare("DELETE FROM wlasciciel_pies WHERE id_pies = :id;");
+	$stmt->bindParam(':id', $id);
+	$stmt->execute();
+}
+
 function CreateBreedingBreedConnection($db, $id, $data)
 {
 	//add breeding - breeds connection
@@ -651,4 +665,37 @@ function CreateBreedingBreedConnection($db, $id, $data)
 		$stmt->bindParam(':breedingId', $id);
 		$stmt->execute();
 	}
+}
+
+function CreateDogBreederConnection($db, $data, $id)
+{
+	$stmt = $db->prepare("INSERT into hodowca_pies (id_osoba, id_pies, changed)
+						VALUES ((Case when :isBreederMember > 0 then 
+						(select id_osoba from osoba where czlonek = :breeder) else :breeder end), :dogId, NOW());");
+	$stmt->bindParam(':breeder', $data->breeder);
+	$stmt->bindParam(':isBreederMember', $data->isBreederMember);
+	$stmt->bindParam(':dogId', $id);
+	$stmt->execute();
+}
+
+function CreateDogOwnerConnection($db, $data, $id)
+{
+	$stmt = $db->prepare("INSERT into wlasciciel_pies (id_osoba, id_pies, changed)
+						VALUES ((Case when :isOwnerMember > 0 then 
+						(select id_osoba from osoba where czlonek = :owner) else :owner end), :dogId, NOW());");
+	$stmt->bindParam(':owner', $data->owner);
+	$stmt->bindParam(':isOwnerMember', $data->isOwnerMember);
+	$stmt->bindParam(':dogId', $id);
+	$stmt->execute();
+}
+
+function GetLineageId($lineageNr, $breedGroup) {
+	$grupar = array("I","II","III","IV","V","VI","VII","VIII","IX","X");
+	$grupa = $grupar[$breedGroup - 1];
+	$year = date('Y');
+	$year = $year[2].$year[3];
+	if($lineageNr>=100 and $lineageNr<1000) $lineageNr = "0".$lineageNr;
+	elseif($lineageNr>=10 and $lineageNr<100) $lineageNr = "00".$lineageNr;
+	elseif($lineageNr<10) $lineageNr = "000".$lineageNr;
+	return $lineageNr.'/'.$grupa.'/'.$year;
 }

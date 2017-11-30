@@ -12,6 +12,7 @@ $SMS = '/Centrala/SMS';
 $SMSReport = '/Centrala/raport-sms';
 $myAccount = '/moje-pfk';
 $lineages = '/Centrala/Rodowody';
+$entryBook = '/Centrala/ksiega-wstepna';
 return 
 [
     'sites' => 
@@ -97,5 +98,20 @@ return
         'lineages' => $lineages,
         '/dogswithlineage' => $lineages,
         '/dogswithlineage/:id' => $lineages,
+        '/breedsautocompletedogswithlineage/:filter' => $lineages,
+        '/colorsautocompletedogswithlineage/:filter' => $lineages,
+        '/personsautocompletedogswithlineage/:filter' => $lineages,
+        '/dogsautocompletedogswithlineage/:filter/:sex' => $lineages,
+        '/dogswithlineage/:id' => $lineages,
+        '/dogswithlineageshowlineage/:id/:generations' => $lineages,
+        '/dogswithlineagesetparent' => $lineages,
+        '/dogswithlineagedeleteparent/:childId/:isFather' => $lineages,
+        '/dogsentrybook' => $entryBook,
+        'entrybook' => $entryBook,
+        '/breedsautocompletedogsentrybook/:filter' => $entryBook,
+        '/colorsautocompletedogsentrybook/:filter' => $entryBook,
+        '/personsautocompletedogsentrybook/:filter' => $entryBook,
+        '/dogsautocompletedogsentrybook/:filter/:sex' => $entryBook,
+        '/dogsentrybook/:id' => $entryBook,
     ]
 ];

@@ -183,6 +183,13 @@ function checkWebsite($website){
 	return true;
 }
 
+function checkEdDysplasia($ed){
+	if(!preg_match('/^[0-9][\/][0-9]$/', $ed)) 
+		return false; 
+	
+	return true;
+}
+
 function checkIfDateInFutureOrToday($date)
 {
 	if(!checkDateRegex($date)) 

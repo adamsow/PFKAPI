@@ -105,22 +105,21 @@ function AddMember($data, $db, $log, $userId, $dbw)
 
 	$log -> addInfo("Adding member for department: " . $data->department);	
 
-	//PHOTO is no longer needed
-	// $stmt = $db->prepare("INSERT INTO photo (copyright, tytul, posted_by) 
-	// 					  VALUES (:copyright, :title, :userId);");
+	$stmt = $db->prepare("INSERT INTO photo (copyright, tytul, posted_by) 
+						  VALUES (:copyright, :title, :userId);");
 
-	// $stmt->bindParam(':copyright', $data->copyright);
-	// $stmt->bindParam(':title', $data->photoTilte);
-	// $stmt->bindParam(':userId', $userId);
+	$stmt->bindParam(':copyright', $data->copyright);
+	$stmt->bindParam(':title', $data->photoTilte);
+	$stmt->bindParam(':userId', $userId);
 
-	// $stmt->execute();
+	$stmt->execute();
 
-	// $photoId = $db->lastInsertId();
+	$photoId = $db->lastInsertId();
 
 	$stmt = $db->prepare("INSERT INTO czlonek (data_ur, data_przys, skladka, przynaleznosc, funkcje, opis, adnotacje, creator, 
-						  created, changed_by, changed) 
+						  created, changed_by, changed, zdjecie) 
 						  VALUES (:birthDate, NOW(), :fee, :department, :functions, :characteristic, :additionalInfo, :userId, 
-						  NOW(), :userId, NOW());");
+						  NOW(), :userId, NOW(), :photoId);");
 	
 	$stmt->bindParam(':birthDate', $data->birthDate);
 	$stmt->bindParam(':fee', $data->fee);
@@ -129,8 +128,7 @@ function AddMember($data, $db, $log, $userId, $dbw)
 	$stmt->bindParam(':characteristic', $data->characteristic);
 	$stmt->bindParam(':additionalInfo', $data->additionalInfo);
 	$stmt->bindParam(':userId', $userId);
-	//$stmt->bindParam(':photoId', $photoId);
-	//$stmt->bindParam(':photoId', null);
+	$stmt->bindParam(':photoId', $photoId);
 
 	$stmt->execute();
 	$id = $db->lastInsertId();
@@ -223,49 +221,41 @@ function UpdateMember($data, $db, $log, $userId, $memberId, $changeEmail, $oldEm
 
 	$log -> addInfo("Updating member: " . $memberId);	
 
-	//PHOTO is no longer needed
 	// //GET photo id
-	// $photoId = GetPhotoId($memberId, $db);
-	// //Update photo
-	// if ($photoId > 0) {
-	// 	$stmt = $db->prepare("UPDATE photo set copyright = :copyright, tytul = :title, posted_by = :userId
-	// 					  WHERE id_photo = :photoId;");
+	$photoId = GetPhotoId($memberId, $db);
+	//Update photo
+	if ($photoId > 0) {
+		$stmt = $db->prepare("UPDATE photo set copyright = :copyright, tytul = :title, posted_by = :userId
+						  WHERE id_photo = :photoId;");
 
-	// 	$stmt->bindParam(':copyright', $data->copyright);
-	// 	$stmt->bindParam(':title', $data->photoTilte);
-	// 	$stmt->bindParam(':userId', $userId);
-	// 	$stmt->bindParam(':photoId', $photoId);
+		$stmt->bindParam(':copyright', $data->copyright);
+		$stmt->bindParam(':title', $data->photoTilte);
+		$stmt->bindParam(':userId', $userId);
+		$stmt->bindParam(':photoId', $photoId);
 	
-	// 	$stmt->execute();
-	// }
-	// else{
-	// 	$stmt = $db->prepare("INSERT INTO photo (copyright, tytul, posted_by) 
-	// 					  VALUES (:copyright, :title, :userId);");
+		$stmt->execute();
+	}
+	else{
+		$stmt = $db->prepare("INSERT INTO photo (copyright, tytul, posted_by) 
+						  VALUES (:copyright, :title, :userId);");
 
-	// 	$stmt->bindParam(':copyright', $data->copyright);
-	// 	$stmt->bindParam(':title', $data->photoTilte);
-	// 	$stmt->bindParam(':userId', $userId);
+		$stmt->bindParam(':copyright', $data->copyright);
+		$stmt->bindParam(':title', $data->photoTilte);
+		$stmt->bindParam(':userId', $userId);
 
-	// 	$stmt->execute();
+		$stmt->execute();
 
-	// 	$photoId = $db->lastInsertId();
+		$photoId = $db->lastInsertId();
 
-	// 	$stmt = $db->prepare("UPDATE czlonek set zdjecie = :photoId 
-	// 					  	WHERE nr_leg = :memberId;");
+		$stmt = $db->prepare("UPDATE czlonek set zdjecie = :photoId 
+						  	WHERE nr_leg = :memberId;");
 
-	// 	$stmt->bindParam(':photoId', $photoId);
-	// 	$stmt->bindParam(':memberId', $memberId);
+		$stmt->bindParam(':photoId', $photoId);
+		$stmt->bindParam(':memberId', $memberId);
 
-	// 	$stmt->execute();
-	// }
+		$stmt->execute();
+	}
 	
-
-	// $stmt->bindParam(':copyright', $data->copyright);
-	// $stmt->bindParam(':title', $data->photoTilte);
-	// $stmt->bindParam(':photoId', $photoId);
-
-	//$stmt->execute();
-
 	$stmt = $db->prepare("UPDATE czlonek set data_ur = :birthDate, skladka = :fee, przynaleznosc = :department, funkcje = :functions,
 						 opis = :characteristic, adnotacje = :additionalInfo, changed_by = :userId, changed = NOW(), 
 						 data_stop = :removeDate

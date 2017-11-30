@@ -18,7 +18,6 @@ function GetDNA($db, $log, $dbw)
         $DNA_single['prober'] = $prober;
         $DNA[$key]['prober'] = $prober;
     }
-   
 	
 	return json_encode($DNA);
 }
@@ -112,7 +111,6 @@ function AddDNA($data, $db, $log, $userId)
 						VALUES (:fullname, :sex, :breedId, :colorId, :birthDate, :lineage, :marking, :owner, :ownerStreet,
 						 :ownerCity, :ownerPostal, :ownerMobile, :breeder, :samplingDate, :prober, :userId, NOW(), :userId, 
 						 NOW(), :dogId, :ownerId, :breederId, :isOwnerMember, :isBreederMember);");
-	$log -> addInfo("Adding DNA data color: " . $data->colorId);	
 	
 	$stmt->bindParam(':fullname', $data->fullname);
 	$stmt->bindParam(':sex', $data->sex);
@@ -148,7 +146,6 @@ function UpdateDNA($data, $db, $log, $userId, $id)
 		return 0;
 	}
     $log -> addInfo("Updating DNA data: " .  $id);	
-	$log -> addInfo("Adding DNA data color: " . $data->colorId);	
 	
 	$stmt = $db->prepare("UPDATE DNA set fullname = :fullname, sex = :sex, breed_id = :breedId, color_id = :colorId, 
 						birth_date = :birthDate, lineage = :lineage, marking = :marking, owner = :owner, 
