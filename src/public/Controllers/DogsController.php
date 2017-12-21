@@ -233,6 +233,74 @@
         echo $result;
     });
 
+    //PUT udpate dog - entry book
+    $app->put('/dogsentrybook/:id', $referer($app), $writeAccess($app), function ($id) use ($app) 
+    {
+        $log = $app->log;
+        $db = $app->db;
+        $dbw = $app->dbw;
+        $body = $app->request->getBody();
+        $userId = $app->jwt->user_id;
+        $data = json_decode($body);
+        if (DogExistsWithAnotherId($db, $data, $id)) {
+            $app->response->status(409);
+            echo "dog_exists";
+            return;
+        }
+        if ($data->nrPedigree != '') {
+            if (PedExistsWithAnotherId($db, $data, $id)) {
+                $app->response->status(409);
+                echo "ped_exists";
+                return;
+            }
+        }
+        
+        $result = UpdateDog($data, $db, $log, $userId, $id);
+        echo $result;
+    });
+
+    //DELETE delete dog - entry book
+    $app->delete('/dogsentrybook/:id', $referer($app), $allAccess($app), function ($id) use ($app) 
+    {
+        $log = $app->log;
+        $db = $app->db;
+        $dbw = $app->dbw;
+        $userId = $app->jwt->user_id;
+        $result = RemoveDog($id, $db, $log, $userId);
+        echo $result;
+    });
+
+    //GET lineage - entry book
+	$app->get('/dogsentrybookshowlineage/:id/:generations', $referer($app), $authorization($app), function ($id, $generations) use ($app) 
+	{
+        $db = $app->db;			
+        $log = $app->log;
+		$lineage = GetLineage($db, $id, $log, $generations);
+		echo $lineage;
+    });
+
+    //POST lineage parent - entry book
+	$app->post('/dogsentrybooksetparent', $referer($app), $writeAccess($app), function () use ($app) 
+	{
+        $db = $app->db;			
+        $log = $app->log;
+        $body = $app->request->getBody();
+        $data = json_decode($body);
+        $userId = $app->jwt->user_id;
+		$result = SetParent($db, $log, $data, $userId);
+		echo $result;
+    });
+
+    //DELETE lineage parent  
+    $app->delete('/dogsentrybookdeleteparent/:childId/:isFather', $referer($app), $writeAccess($app), 
+    function ($childId, $isFather) use ($app) 
+    {
+       $db = $app->db;			
+       $log = $app->log;
+       $userId = $app->jwt->user_id;
+       $result = DeleteParent($db, $log, $childId, $isFather, $userId);
+       echo $result;
+    });
  
     $app->run();
  

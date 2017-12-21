@@ -238,8 +238,8 @@ function UpdateDog($data, $db, $log, $userId, $id)
 
 	DeleteDogBreederConnectionByDogId($db, $id);
 	CreateDogBreederConnection($db, $data, $id);
+	DeleteDogOwnerConnectionByDogId($db, $id);
 	if ($data->owner != '') {
-		DeleteDogOwnerConnectionByDogId($db, $id);
 		CreateDogOwnerConnection($db, $data, $id);
 	}
 

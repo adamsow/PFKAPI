@@ -113,5 +113,8 @@ return
         '/personsautocompletedogsentrybook/:filter' => $entryBook,
         '/dogsautocompletedogsentrybook/:filter/:sex' => $entryBook,
         '/dogsentrybook/:id' => $entryBook,
+        '/dogsentrybookshowlineage/:id/:generations' => $entryBook,
+        '/dogsentrybooksetparent' => $entryBook,
+        '/dogsentrybookdeleteparent/:childId/:isFather' => $entryBook,
     ]
 ];
